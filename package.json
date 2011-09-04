@@ -1,0 +1,10 @@
+{
+    "name": "buster-resources",
+    "version": "0.1.0",
+    "main": "./lib/buster-resources",
+    "dependencies": {
+        "buster-promise": "~0.3",
+        "mime": "~1",
+        "uglify-js": "~1"
+    }
+}
