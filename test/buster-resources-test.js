@@ -11,7 +11,7 @@ function assertBodyIsRootResourceProcessed(body, resourceSet) {
     assert.match(body, '<script src="' + resourceSet.contextPath  + '/foo.js"');
 }
 
-buster.testCase("Resource middleware", {
+buster.testCase("Buster resources", {
     setUp: function () {
         var self = this;
         this.br = Object.create(busterResources);
