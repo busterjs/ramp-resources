@@ -510,7 +510,32 @@ buster.testCase("Resource middleware", {
                     assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
                     done();
                 }).end();
-            }
+            },
+
+            "on combined resources": {
+                setUp: function () {
+                    this.rs.addResource("/bundle.js", {
+                        combine: ["/foo.js", "/bar/baz.js"],
+                        headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
+                    });
+
+                    this.rs.addResource("/bar/baz.js", {
+                        content: "var b = 5 + 5; // Yes",
+                        headers: {"Content-Type": "text/custom"}
+                    });
+                },
+
+                "should serve combined contents with custom header": function (done) {
+                    h.request({path: this.rs.contextPath + "/bundle.js"}, function (res, body) {
+                        assert.equals(200, res.statusCode);
+                        assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
+                        assert.match(res.headers, {
+                            "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
+                        });
+                        done();
+                    }).end();
+                }
+            },
         }
     }
 });
