@@ -1,8 +1,8 @@
 var buster = require("buster");
 var assert = buster.assert;
-var http = require("http");
+var refute = buster.refute;
 var fs = require("fs");
-var h = require("./test-helper");
+var http = require("http");
 
 var busterResources = require("./../lib/buster-resources");
 
@@ -11,50 +11,40 @@ function assertBodyIsRootResourceProcessed(body, resourceSet) {
 }
 
 buster.testCase("Resource middleware", {
-    setUp: function (done) {
+    setUp: function () {
         var self = this;
-        this.rm = Object.create(busterResources);
-
-        this.httpServer = http.createServer(function (req, res) {
-            if (self.rm.respond(req, res)) return true;
-            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-            res.end();
-        });
-        this.httpServer.listen(h.SERVER_PORT, done);
-    },
-
-    tearDown: function (done) {
-        this.httpServer.on("close", done);
-        this.httpServer.close();
+        this.br = Object.create(busterResources);
     },
 
     "test root resource defaults to text/html content-type": function (done) {
-        var rs = this.rm.createResourceSet({
+        var rs = this.br.createResourceSet({
             load: [],
             resources: {"/": {content: "hullo!"}}
         });
 
-        h.request({path: rs.contextPath + "/", method: "GET"}, function (res, body) {
-            assert.equals(res.headers["content-type"], "text/html");
+        
+        buster.assert.match(rs.resources["/"].headers, {"Content-Type": "text/html"});
+        rs.getResource("/", function (err, resource) {
+            buster.assert.match(resource.headers, {"Content-Type": "text/html"});
             done();
-        }).end();
+        });
     },
 
     "test root resource as a buffer": function (done) {
-        var rs = this.rm.createResourceSet({
+        var rs = this.br.createResourceSet({
             load: [],
             resources: {"/": {content: new Buffer([0x3c, 0x62, 0x6f, 0x64, 0x79, 0x3e, 0x3c, 0x2f, 0x62, 0x6f, 0x64, 0x79, 0x3e])}}
         });
 
-        h.request({path: rs.contextPath + "/", method: "GET"}, function (res, body) {
-            assert.match(body, /^<body>/);
+        rs.getResource("/", function (err, resource) {
+            assert.match(resource.content, /^<body>/);
             done();
-        }).end();
+        });
     },
 
     "resource sets": {
         setUp: function () {
-            this.rs = this.rm.createResourceSet({
+            this.rs = this.br.createResourceSet({
                 load: ["/foo.js"],
                 resources: {
                     "/foo.js": {
@@ -67,86 +57,78 @@ buster.testCase("Resource middleware", {
         "test adding resource post create": function (done) {
             this.rs.addResource("/roflmao.txt", {"content": "Roflmao!"});
 
-            h.request({
-                path: this.rs.contextPath + "/roflmao.txt",
-                method: "GET"}, function (res, body) {
-                    assert.equals(res.statusCode, 200);
-                    assert.equals(body, "Roflmao!");
-                    done();
-                }).end();
+            this.br.getResource("/roflmao.txt", function (err, resource) {
+                assert.equals(resource.content, "Roflmao!");
+                done();
+            });
         },
 
         "test adding new root resource post create": function (done) {
             var self = this;
             this.rs.addResource("/", {content: "hullo"});
-            h.request({
-                path: this.rs.contextPath + "/",
-                method: "GET"}, function (res, body) {
-                    assertBodyIsRootResourceProcessed(body, self.rs);
-                    done();
-                }).end();
+
+            this.br.getResource("/", function (err, resource) {
+                assertBodyIsRootResourceProcessed(resource.content, self.rs);
+                done();
+            });
         },
 
         "test adding new root resouce with custom content-type": function (done) {
             var self = this;
             this.rs.addResource("/", {content: "hullo", headers: {"Content-Type": "text/wtf"}});
-            h.request({
-                path: this.rs.contextPath + "/",
-                method: "GET"}, function (res, body) {
-                    assert.equals(res.headers["content-type"], "text/wtf");
-                    done();
-                }).end();
+
+            this.br.getResource("/", function (err, resource) {
+                assert.equals(resource.headers["Content-Type"], "text/wtf");
+                done();
+            });
         },
 
         "test serving buffer resources": function (done) {
             this.rs.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
-            h.request({
-                path: this.rs.contextPath + "/hullo.txt",
-                method: "GET"}, function (res, body) {
-                    assert.equals(body, "PNG");
-                    done();
-                }).end();
+
+            this.br.getResource("/hullo.txt", function (err, resource) {
+                assert.equals(resource.content, "PNG");
+                done();
+            });
         },
 
-        "test hosts resources": function (done) {
-            h.request({path: this.rs.contextPath + "/foo.js", method: "GET"}, function (res, body) {
-                assert.equals(200, res.statusCode);
-                assert.equals("var a = 5 + 5;", body);
-                assert.equals("application/javascript", res.headers["content-type"]);
+        "test provides resources created with resoruce set": function (done) {
+            this.br.getResource("/foo.js", function (err, resource) {
+                assert.equals(resource.content, "var a = 5 + 5;");
+                assert.equals(resource.headers["Content-Type"], "application/javascript");
                 done();
-            }).end();
+            });
         },
 
         "test hosts resources with custom headers": function (done) {
             this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
-            h.request({path: this.rs.contextPath + "/baz.js", method: "GET"}, function (res, body) {
-                assert.equals(200, res.statusCode);
-                assert.equals("text/custom", res.headers["content-type"]);
+            this.br.getResource("/baz.js", function (err, resource) {
+                assert.equals(resource.headers["Content-Type"], "text/custom");                
                 done();
-            }).end();
+            });
         },
 
         "test provides default root resource": function (done) {
-            h.request({path: this.rs.contextPath + "/", method: "GET"}, function (res, body) {
-                assert.equals(200, res.statusCode);
-                assert.equals("text/html", res.headers["content-type"]);
+            this.br.getResource("/", function (err, resource) {
+                assert.equals(resource.headers["Content-Type"], "text/html");
                 done();
-            }).end();
+            });
         },
 
         "test does not serve none existing resources": function (done) {        
-            h.request({path: this.rs.contextPath + "/does/not/exist.js", method: "GET"}, function (res, body) {
-                assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+            this.br.getResource("/does/not/exist.js", function (err, resource) {
+                assert.equals(err, busterResources.RESOURCE_NOT_FOUND);
+                assert.isUndefined(resource);
                 done();
-            }).end();
+            });
         },
 
         "test inserts scripts into root resource": function (done) {
             var self = this;
-            h.request({path: this.rs.contextPath + "/", method: "GET"}, function (res, body) {
-                assertBodyIsRootResourceProcessed(body, self.rs);
+            this.br.getResource("/", function (err, resource) {
+                assertBodyIsRootResourceProcessed(resource.content, self.rs);
                 done();
-            }).end();
+            });
         },
 
         "test content is function": function (done) {
@@ -156,11 +138,10 @@ buster.testCase("Resource middleware", {
                 }
             });
 
-            h.request({path: this.rs.contextPath + "/test", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(body, "Test");
+            this.br.getResource("/test", function (err, resource) {
+                assert.equals("Test", resource.content);
                 done();
-            }).end();
+            });
         },
 
         "test content is function with failure": function (done) {
@@ -170,55 +151,46 @@ buster.testCase("Resource middleware", {
                 }
             });
 
-            h.request({path: this.rs.contextPath + "/test", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 500);
-                // TODO: test with actual exception and specify what 'body' should be.
+            this.br.getResource("/test", function (err, resource) {
+                assert.equals("something", err);
+                // TODO: specify what 'resource.content' should be.
                 done();
-            }).end();
+            });
         },
 
         "test adding file by path": function (done) {
             this.rs.addFile(__filename);
 
-            h.request({path: this.rs.contextPath + __filename, method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(body, fs.readFileSync(__filename));
+            this.br.getResource(__filename, function (err, resource) {                
+                assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
                 done();
-            }).end();
+            });
         },
 
         "test adding file by path with missing file": function (done) {
             var filename = "/tmp/i-sure-hope-this-file-does-not-exist" + new Date().getTime().toString();
             this.rs.addFile(filename);
 
-            h.request({path: this.rs.contextPath + filename, method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 500);
-                // TODO: specify what 'body' should be.
+            this.br.getResource(filename, function (err, resource) {
+                assert.isUndefined(resource);
+                assert.equals(err.code, "ENOENT");
                 done();
-            }).end();
+            });
         },
 
-        "test getting cached resources with nothing cached": function (done) {
-            h.request({path: "/resources", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(JSON.parse(body), {});
-                done();
-            }).end();
+        "test getting cached resources with nothing cached": function () {
+            assert.equals(this.br.getCachedResources(), {});
         },
 
-        "test getting cached resources with resource cached": function (done) {
+        "test getting cached resources with resource cached": function () {
             this.rs.addResource("/test.js", {
                 content: "",
                 etag: "123abc"
             });
 
-            h.request({path: "/resources", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                var actual = JSON.parse(body);
-                buster.assert.equals(Object.keys(actual).length, 1);
-                buster.assert.equals(actual["/test.js"], ["123abc"]);
-                done();
-            }).end();
+            var actual = this.br.getCachedResources();
+            assert.equals(Object.keys(actual).length, 1);
+            assert.equals(actual, {"/test.js": ["123abc"]});
         },
 
         "test re-using cached resource when creating new resource set": function (done) {
@@ -228,25 +200,24 @@ buster.testCase("Resource middleware", {
                 etag: "123abc"
             });
 
-            var rs2 = this.rm.createResourceSet({
+            var rs2 = this.br.createResourceSet({
                 contextPath: "/rs2",
                 resources: {
                     "/test.js": {etag: "123abc"}
                 }
             });
 
-            h.request({path: rs2.contextPath + "/test.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(body, "Hello, World!");
-                buster.assert.equals(res.headers["x-foo"], 666);
+            this.br.getResource("/test.js", function (err, resource) {
+                assert.equals(resource.content, "Hello, World!");
+                assert.match(resource.headers, {"X-Foo": "666"});
                 done();
-            }).end();
+            });
         },
 
         "test creating new resource with none existing etag": function (done) {
             var self = this;
             try {
-                self.rm.createResourceSet({
+                self.br.createResourceSet({
                     contextPath: "/rs2",
                     resources: {
                         "/test.js": {etag: "123abc"}
@@ -262,7 +233,7 @@ buster.testCase("Resource middleware", {
 
         "test removing resource sets": function (done) {
             var self = this;
-            var rs = this.rm.createResourceSet({
+            var rs = this.br.createResourceSet({
                 resources: {
                     "/myfile.js": {
                         content: "Hi there."
@@ -272,18 +243,22 @@ buster.testCase("Resource middleware", {
             rs.contextPath = "/yay";
 
             var resourcePath = "/yay/myfile.js";
-            h.request({path: resourcePath, method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                self.rm.removeResourceSet(rs);
-                h.request({path: resourcePath, method: "GET"}, function (res, body) {
-                    buster.assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+
+            this.br.getResource(resourcePath, function (err, resource) {
+                assert.isUndefined(err);
+                refute.isUndefined(resource);
+                self.br.removeResourceSet(rs);
+
+                self.br.getResource(resourcePath, function (err, resource) {
+                    assert.equals(err, busterResources.RESOURCE_NOT_FOUND);
+                    assert.isUndefined(resource);
                     done();
-                }).end();
-            }).end();
+                });
+            });
         },
 
-        "test re-using cached resource for destroyed resource set": function (done) {
-            var rs = this.rm.createResourceSet({
+        "test re-using cached resource for destroyed resource set": function () {
+            var rs = this.br.createResourceSet({
                 resources: {
                     "/myfile.js": {
                         content: "Hi there.",
@@ -292,19 +267,15 @@ buster.testCase("Resource middleware", {
                 }
             });
 
-            this.rm.removeResourceSet(rs);
+            this.br.removeResourceSet(rs);
 
-            h.request({path: "/resources", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                var actual = JSON.parse(body);
-                buster.assert.equals(Object.keys(actual).length, 1);
-                buster.assert.equals(actual["/myfile.js"], ["123abc"]);
-                done();
-            }).end();
+            var actual = this.br.getCachedResources();
+            assert.equals(Object.keys(actual).length, 1);
+            assert.equals(actual, {"/myfile.js": ["123abc"]});
         },
 
         "test creating new resource with etag for resource in deleted resource set": function (done) {
-            var rs = this.rm.createResourceSet({
+            var rs = this.br.createResourceSet({
                 resources: {
                     "/myfile.js": {
                         content: "Hi there.",
@@ -312,29 +283,28 @@ buster.testCase("Resource middleware", {
                     }
                 }
             });
-            this.rm.removeResourceSet(rs);
+            this.br.removeResourceSet(rs);
 
-            var rs2 = this.rm.createResourceSet({
+            var rs2 = this.br.createResourceSet({
                 contextPath: "/rs2",
                 resources: {
                     "/myfile.js": {etag: "123abc"}
                 }
             });
 
-            h.request({path: rs2.contextPath + "/myfile.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(body, "Hi there.");
+            this.br.getResource(rs2.contextPath + "/myfile.js", function (err, resource) {
+                assert.equals(resource.content, "Hi there.");
                 done();
-            }).end();
+            });
         },
 
-        "test multiple caches for the same path": function (done) {
+        "test multiple caches for the same path": function () {
             this.rs.addResource("/test.js", {
                 content: "Hello, World!",
                 etag: "123abc"
             });
 
-            var rs2 = this.rm.createResourceSet({
+            var rs2 = this.br.createResourceSet({
                 resources: {
                     "/test.js": {
                         content: "Hello again, World.",
@@ -343,17 +313,13 @@ buster.testCase("Resource middleware", {
                 }
             });
 
-            h.request({path: "/resources", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                var actual = JSON.parse(body);
-                buster.assert.match(actual["/test.js"], ["123abc", "321cba"]);
-                buster.assert.equals(actual["/test.js"].length, 2);
-                done();
-            }).end();
+            var actual = this.br.getCachedResources();
+            assert.equals(actual["/test.js"], ["123abc", "321cba"]);
         },
 
         "test garbage collecting deletes resources for removed resource sets": function (done) {
-            var rs = this.rm.createResourceSet({
+            var self = this;
+            var rs = this.br.createResourceSet({
                 contextPath: "/myrs",
                 resources: {
                     "/myfile.js": {
@@ -362,26 +328,23 @@ buster.testCase("Resource middleware", {
                     }
                 }
             });
-            this.rm.removeResourceSet(rs);
+            this.br.removeResourceSet(rs);
+            this.br.gc();
 
-            h.request({path: "/resources", method: "DELETE"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-
-                h.request({path: rs.contextPath + "/myfile.js", method: "GET"}, function (res, body) {
-                    buster.assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
-                    done();
-                }).end();
-            }).end();
+            this.br.getResource(rs.contextPath + "/myfile.js", function (err, resource) {
+                assert.equals(err, self.br.RESOURCE_NOT_FOUND);
+                done();
+            });
         },
 
-        "test periodically resetting cached resources": function (done) {
-            this.rm.cacheInvalidationTimeout = 3600000;
-            this.rm.cacheInvalidationAge = 1800000;
+        "test periodically resetting cached resources": function () {
+            this.br.cacheInvalidationTimeout = 3600000;
+            this.br.cacheInvalidationAge = 1800000;
 
             var clock = this.useFakeTimers();
-            this.rm.startCacheInvalidationTimeout();
+            this.br.startCacheInvalidationTimeout();
 
-            var rs = this.rm.createResourceSet({
+            var rs = this.br.createResourceSet({
                 resources: {
                     "/test.js": {
                         content: "Yep yep",
@@ -389,11 +352,11 @@ buster.testCase("Resource middleware", {
                     }
                 }
             });
-            this.rm.removeResourceSet(rs);
+            this.br.removeResourceSet(rs);
 
             clock.tick(1800000);
 
-            var rs = this.rm.createResourceSet({
+            var rs = this.br.createResourceSet({
                 resources: {
                     "/test.js": {
                         content: "Good stuff",
@@ -401,54 +364,37 @@ buster.testCase("Resource middleware", {
                     }
                 }
             });
-            this.rm.removeResourceSet(rs);
+            this.br.removeResourceSet(rs);
 
             clock.tick(1800000);
 
-            h.request({path: "/resources", method: "GET"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                var actual = JSON.parse(body);
-                buster.assert.equals(actual, {"/test.js":["321cba"]});
-                done();
-            }).end();
+            var actual = this.br.getCachedResources();
+            assert.equals(actual, {"/test.js":["321cba"]});
         },
 
         "test cache invalidation timeout reschedules": function () {
             var clock = this.useFakeTimers();
-            this.spy(this.rm, "startCacheInvalidationTimeout");
-            this.rm.startCacheInvalidationTimeout();
+            this.spy(this.br, "startCacheInvalidationTimeout");
+            this.br.startCacheInvalidationTimeout();
             clock.tick(3600000 * 4);
             
-            buster.assert.equals(this.rm.startCacheInvalidationTimeout.callCount, 5);
+            buster.assert.equals(this.br.startCacheInvalidationTimeout.callCount, 5);
         },
 
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
-                h.request({
-                    path: this.rs.contextPath + "/foo.js"
-                }, function (res, body) {
-                    assert.equals(res.headers["content-type"], "application/javascript");
+                this.br.getResource(this.rs.contextPath + "/foo.js", function (err, resource) {
+                    assert.match(resource.headers, {"Content-Type": "application/javascript"});
                     done();
-                }).end();
-            },
-
-            "should serve javascript with reasonable mime-type and other headers": function (done) {
-                h.request({
-                    path: this.rs.contextPath + "/foo.js"
-                }, function (res, body) {
-                    assert.equals(res.headers["content-type"], "application/javascript");
-                    done();
-                }).end();
+                });
             },
 
             "should not overwrite custom mime-type": function (done) {
                 this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
-                h.request({
-                    path: this.rs.contextPath + "/baz.js"
-                }, function (res, body) {
-                    assert.equals(res.headers["content-type"], "text/custom");
+                this.br.getResource(this.rs.contextPath + "/baz.js", function (err, resource) {
+                    assert.match(resource.headers, {"Content-Type": "text/custom"});
                     done();
-                }).end();
+                });
             }
         },
 
@@ -467,17 +413,13 @@ buster.testCase("Resource middleware", {
             },
 
             "should serve combined contents with custom header": function (done) {
-                h.request({
-                    path: this.rs.contextPath + "/bundle.js"
-                }, function (res, body) {
-                    assert.equals(res.statusCode, 200);
-                    assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
-                    assert.match(res.headers, {
-                        "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
+                this.br.getResource(this.rs.contextPath + "/bundle.js", function (err, resource) {
+                    assert.equals(resource.content, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
+                    assert.match(resource.headers, {
+                        "Expires": "Sun, 15 Mar 2012 22:22 37 GMT"
                     });
-
                     done();
-                }).end();
+                });
             },
 
             "should serve combined contents minified": function (done) {
@@ -486,13 +428,10 @@ buster.testCase("Resource middleware", {
                     minify: true
                 });
 
-                h.request({
-                    path: this.rs.contextPath + "/bundle.min.js"
-                }, function (res, body) {
-                    assert.equals(res.statusCode, 200);
-                    assert.equals(body, "var a=10,b=10");
+                this.br.getResource(this.rs.contextPath + "/bundle.min.js", function (err, resource) {
+                    assert.equals(resource.content, "var a=10,b=10");
                     done();
-                }).end();
+                });
             },
 
             "should serve single resource contents minified": function (done) {
@@ -501,27 +440,26 @@ buster.testCase("Resource middleware", {
                     minify: true
                 });
 
-                h.request({
-                    path: this.rs.contextPath + "/foo.min.js"
-                }, function (res, body) {
-                    assert.equals(res.statusCode, 200);
-                    assert.equals(body, "var a=10");
+                this.br.getResource(this.rs.contextPath + "/foo.min.js", function (err, resource) {
+                    assert.equals(resource.content, "var a=10");
                     done();
-                }).end();
+                });
             }
         },
 
         "proxy requests": {
             setUp: function (done) {
+                var port = 17171;
+
                 this.proxyBackend = http.createServer(function (req, res) {
                     res.writeHead(200, { "X-Buster-Backend": "Yes" });
                     res.end("PROXY: " + req.url);
                 });
 
-                this.proxyBackend.listen(h.PROXY_PORT, done);
+                this.proxyBackend.listen(port, done);
 
                 this.rs.addResource("/other", {
-                    backend: "http://localhost:" + h.PROXY_PORT + "/"
+                    backend: "http://localhost:" + port + "/"
                 });
             },
 
@@ -531,15 +469,12 @@ buster.testCase("Resource middleware", {
             },
 
             "should proxy requests to /other": function (done) {
-                h.request({
-                    path: this.rs.contextPath + "/other/file.js",
-                    method: "GET"
-                }, function (res, body) {
-                    assert.equals(200, res.statusCode);
-                    assert.equals(body, "PROXY: /other/file.js");
-                    assert.equals(res.headers["x-buster-backend"], "Yes");
+                this.br.getResource(this.rs.contextPath + "/other/file.js", function (err, resource) {
+                    assert.isUndefined(err);
+                    assert.equals(resource.content.toString("utf8"), "PROXY: /other/file.js");
+                    assert.equals(resource.headers["x-buster-backend"], "Yes");
                     done();
-                }).end();
+                });
             }
         }
     }
