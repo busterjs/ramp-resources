@@ -5,6 +5,7 @@ var fs = require("fs");
 var http = require("http");
 
 var busterResources = require("./../lib/buster-resources");
+var h = require("./test-helper");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
     assert.match(body, '<script src="' + resourceSet.contextPath  + '/foo.js"');
@@ -475,6 +476,40 @@ buster.testCase("Resource middleware", {
                     assert.equals(resource.headers["x-buster-backend"], "Yes");
                     done();
                 });
+            }
+        },
+
+        "via http": {
+            setUp: function (done) {
+                var self = this;
+
+                this.server = http.createServer(function (req, res) {
+                    if (self.br.getResourceViaHttp(req, res)) return;
+
+                    res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+                    res.end();
+                });
+                this.server.listen(h.SERVER_PORT, done);
+            },
+
+            tearDown: function (done) {
+                this.server.on("close", done);
+                this.server.close();
+            },
+
+            "should get resources": function (done) {
+                h.request({path: this.rs.contextPath + "/foo.js"}, function (res, body) {
+                    assert.equals(res.statusCode, 200);
+                    assert.equals(body, "var a = 5 + 5;");
+                    done();
+                }).end();
+            },
+
+            "should not respond for none existing resources": function (done) {
+                h.request({path: this.rs.contextPath + "/does-not-exist.js"}, function (res, body) {
+                    assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                    done();
+                }).end();
             }
         }
     }
