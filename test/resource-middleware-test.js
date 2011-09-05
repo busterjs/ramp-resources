@@ -536,6 +536,37 @@ buster.testCase("Resource middleware", {
                     }).end();
                 }
             },
+
+            "on proxies": {
+                setUp: function (done) {
+                    var port = 17171;
+
+                    this.proxyBackend = http.createServer(function (req, res) {
+                        res.writeHead(201, { "X-Buster-Backend": "Yes" });
+                        res.end("PROXY: " + req.url);
+                    });
+
+                    this.proxyBackend.listen(port, done);
+
+                    this.rs.addResource("/other", {
+                        backend: "http://localhost:" + port + "/"
+                    });
+                },
+
+                tearDown: function (done) {
+                    this.proxyBackend.on("close", done);
+                    this.proxyBackend.close();
+                },
+
+                "should proxy requests to /other": function (done) {
+                    h.request({path: this.rs.contextPath + "/other/file.js"}, function (res, body) {
+                        assert.equals(201, res.statusCode);
+                        assert.equals(body, "PROXY: /other/file.js");
+                        assert.equals(res.headers["x-buster-backend"], "Yes");
+                        done();
+                    }).end();;
+                }
+            }
         }
     }
 });
