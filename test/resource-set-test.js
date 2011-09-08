@@ -15,12 +15,5 @@ buster.testCase("resource-set", {
         assert.equals(r.load.length, 0);
 
         assert.equals("", r.contextPath);
-    },
-
-    "test setting context path after creation": function () {
-        var r = this.br.createResourceSet({});
-        r.contextPath = "/foo";
-
-        assert.equals("/foo", r.contextPath);
     }
 });
