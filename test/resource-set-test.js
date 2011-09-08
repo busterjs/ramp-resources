@@ -10,7 +10,7 @@ buster.testCase("resource-set", {
     },
 
     "test creating with blank object": function () {
-        var r = this.br.createResourceSet({});
+        var r = this.br.createResourceSet({resources: {}});
         assert(r.load instanceof Array);
         assert.equals(r.load.length, 0);
 
