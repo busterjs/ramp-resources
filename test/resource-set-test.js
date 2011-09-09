@@ -30,12 +30,15 @@ buster.testCase("resource-set", {
         assert.equals(r.load, ["/bar", "/foo"]);
     },
 
-    "// test adding entry to load post creation that isn't in 'resources'": function () {
+    "test adding entry to load post creation that isn't in 'resources'": function (done) {
         var r = this.br.createResourceSet({resources: {}});
 
-        assert.exception(function () {
+        try {
             r.prependToLoad(["/bar"]);
-        });
+        } catch (e) {
+            assert.match(e.message, "missing corresponding");
+            done();
+        }
     },
 
     "test all entries in 'load' are script injected to root resource": function (done) {
@@ -51,5 +54,5 @@ buster.testCase("resource-set", {
             assert.match(body, '<script src="' + r.contextPath  + '/baz"');
             done();
         });
-    }
+    },
 });
