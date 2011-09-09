@@ -1,5 +1,6 @@
 var buster = require("buster");
 var assert = buster.assert;
+var refute = buster.refute;
 var busterResources = require("./../lib/buster-resources");
 
 // For legacy reasons, most of the resource-set tests are encapsulated in session
@@ -55,4 +56,41 @@ buster.testCase("resource-set", {
             done();
         });
     },
+
+    "validations": {
+        "should fail if load entry misses corresponding resources entry": function (done) {
+            try {
+                var r = this.br.createResourceSet({load:["/foo"]})
+            } catch (e) {
+                assert.equals(e.message, "'load' entry '/foo' missing corresponding 'resources' entry.");
+                done();
+            }
+        },
+
+        "with content property present": {
+            "should fail if not a buffer or string": function () {
+                var self = this;
+
+                refute.exception(function () {
+                    self.br.createResourceSet({resources:{"/foo":{"content":"foo"}}});
+                });
+
+                refute.exception(function () {
+                    self.br.createResourceSet({resources:{"/foo":{"content":new Buffer([0x00, 0x01])}}});
+                });
+
+                assert.exception(function () {
+                    self.br.createResourceSet({resources:{"/foo":{"content":1234}}});
+                });
+
+                assert.exception(function () {
+                    self.br.createResourceSet({resources:{"/foo":{"content":{}}}});
+                });
+
+                assert.exception(function () {
+                    self.br.createResourceSet({resources:{"/foo":{"content":[]}}});
+                });
+            }
+        }
+    }
 });
