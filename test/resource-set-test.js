@@ -15,5 +15,33 @@ buster.testCase("resource-set", {
         assert.equals(r.load.length, 0);
 
         assert.equals("", r.contextPath);
+    },
+
+    "test adding entries to load post creation": function () {
+        var r = this.br.createResourceSet({
+            load: ["/foo"],
+            resources: {
+                "/foo":{"content":"foo"},
+                "/bar": {"content":"bar"}
+            }
+        });
+
+        r.prependToLoad(["/bar"]);
+        assert.equals(r.load, ["/bar", "/foo"]);
+    },
+
+    "test all entries in 'load' are script injected to root resource": function (done) {
+        var r = this.br.createResourceSet({resources:{}});
+
+        // NOTE: altering 'load' directly is not a supported API.
+        r.load = ["/foo", "/bar", "/baz"];
+
+        r.getResource("/", function (err, resource) {
+            var body = resource.content;
+            assert.match(body,'<script src="' + r.contextPath  + '/foo"');
+            assert.match(body, '<script src="' + r.contextPath  + '/bar"');
+            assert.match(body, '<script src="' + r.contextPath  + '/baz"');
+            done();
+        });
     }
 });
