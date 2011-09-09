@@ -91,6 +91,58 @@ buster.testCase("resource-set", {
                     self.br.createResourceSet({resources:{"/foo":{"content":[]}}});
                 });
             }
+        },
+
+        "should fail when not an object": function (done) {
+            try {
+                var r = this.br.createResourceSet()
+            } catch (e) {
+                assert.equals(e.message, "Resource object is null or undefined.");
+                done();
+            }
+        },
+
+        "should fail if neither etag, content, backend or combine is present": function () {
+            var self = this;
+
+            assert.exception(function () {
+                self.br.createResourceSet({resources:{"/foo":{}}});
+            }, "Error", "Received no resource etag, content, backend or combine");
+        },
+
+        "should fail if more than one of content, backend or combine is present": function () {
+            var self = this;
+            var msg = "Can only have one of content, combine and backend";
+
+            assert.exception(function () {
+                self.br.createResourceSet({resources:{"/foo":{content:"foo", combine: ["/xxx"]}}});
+            }, "Error", msg);
+
+            assert.exception(function () {
+                self.br.createResourceSet({resources:{"/foo":{content:"foo", backend: "http://foo.com"}}});
+            }, "Error", msg);
+
+            assert.exception(function () {
+                self.br.createResourceSet({resources:{"/foo":{combine:["/xxx"], backend: "http://foo.com"}}});
+            }, "Error", msg);
+        },
+
+        "should fail if backend is not a valid URL": function () {
+            var self = this;
+            var msg = "Proxy resource backend is invalid";
+
+            assert.exception(function () {
+                self.br.createResourceSet({resources:{"/foo":{backend:"wtf"}}});
+            }, "Error", msg);
+        },
+
+        "should fail with relative path": function () {
+            var self = this;
+            var msg = "Proxy resource backend is invalid";
+
+            assert.exception(function () {
+                self.br.createResourceSet({resources:{"../foo":{content:""}}});
+            }, "Error", "Path can not be relative");
         }
     }
 });
