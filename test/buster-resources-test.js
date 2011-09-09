@@ -5,6 +5,8 @@ var fs = require("fs");
 var http = require("http");
 
 var busterResources = require("./../lib/buster-resources");
+var busterResourcesResourceSet = require("./../lib/resource-set");
+var busterResourcesResource = require("./../lib/resource");
 var h = require("./test-helper");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
@@ -41,6 +43,19 @@ buster.testCase("Buster resources", {
             assert.match(resource.content, /^<body>/);
             done();
         });
+    },
+
+    "test provides validation APIs": function () {
+        this.stub(busterResourcesResourceSet, "validate");
+        busterResources.validateResourceSet("whatever");
+        assert(busterResourcesResourceSet.validate.calledOnce);
+        assert(busterResourcesResourceSet.validate.calledWith("whatever"));
+
+        this.stub(busterResourcesResource, "validate");
+        busterResources.validateResource("whatever");
+        assert(busterResourcesResource.validate.calledOnce);
+        assert(busterResourcesResource.validate.calledWith("whatever"));
+        
     },
 
     "resource sets": {
