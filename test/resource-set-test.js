@@ -30,6 +30,14 @@ buster.testCase("resource-set", {
         assert.equals(r.load, ["/bar", "/foo"]);
     },
 
+    "// test adding entry to load post creation that isn't in 'resources'": function () {
+        var r = this.br.createResourceSet({resources: {}});
+
+        assert.exception(function () {
+            r.prependToLoad(["/bar"]);
+        });
+    },
+
     "test all entries in 'load' are script injected to root resource": function (done) {
         var r = this.br.createResourceSet({resources:{}});
 
