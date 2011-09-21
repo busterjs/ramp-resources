@@ -142,5 +142,32 @@ buster.testCase("resource-set", {
                 self.br.createResourceSet({resources:{"../foo":{content:""}}});
             }, "Error", "Path can not be relative");
         }
+    },
+
+    "read only output": {
+        "should handle basic resource": function (done) {
+            var r = this.br.createResourceSet({
+                load: ["/foo"],
+                resources: {
+                    "/foo":{"content":"foo"},
+                    "/bar": {"content":"bar"}
+                }
+            });
+
+            r.getReadOnly(function (err, ro) {
+                assert.isUndefined(err);
+                assert.match(ro, {
+                    load: ["/foo"],
+                    resources: {
+                        "/foo":{"content":"foo"},
+                        "/bar": {"content":"bar"}
+                    }
+                });
+
+                assert("/" in ro.resources);
+
+                done();
+            });
+        }
     }
 });
