@@ -491,6 +491,17 @@ buster.testCase("Buster resources", {
                     assert.equals(resource.headers["x-buster-backend"], "Yes");
                     done();
                 });
+            },
+
+            "should honor context path": function (done) {
+                this.rs.contextPath = "/foo";
+
+                this.br.getResource(this.rs.contextPath + "/other/file.js", function (err, resource) {
+                    assert.isUndefined(err);
+                    assert.equals(resource.content.toString("utf8"), "PROXY: /other/file.js");
+                    assert.equals(resource.headers["x-buster-backend"], "Yes");
+                    done();
+                });
             }
         },
 
