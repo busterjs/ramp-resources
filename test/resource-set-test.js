@@ -166,6 +166,51 @@ buster.testCase("resource-set", {
                 });
 
                 assert("/" in ro.resources);
+                assert(Object.keys(ro.resources).length, 3);
+
+                done();
+            });
+        },
+
+        "should handle resources with etag": function (done) {
+            var r = resourceSet.create({
+                resources: {
+                    "/foo":{"etag":"1234"}
+                }
+            });
+
+            r.getReadOnly(function (err, ro) {
+                assert.isUndefined(err);
+                assert.match(ro, {
+                    resources: {
+                        "/foo":{"etag":"1234"},
+                    }
+                });
+
+                refute("content" in ro.resources["/foo"]);
+                refute("backend" in ro.resources["/foo"]);
+
+                done();
+            });
+        },
+
+        "should handle resources with backend": function (done) {
+            var r = resourceSet.create({
+                resources: {
+                    "/foo":{"backend":"http://foo.com"}
+                }
+            });
+
+            r.getReadOnly(function (err, ro) {
+                assert.isUndefined(err);
+                assert.match(ro, {
+                    resources: {
+                        "/foo":{"backend":"http://foo.com"},
+                    }
+                });
+
+                refute("content" in ro.resources["/foo"]);
+                refute("etag" in ro.resources["/foo"]);
 
                 done();
             });
