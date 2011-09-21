@@ -189,6 +189,7 @@ buster.testCase("resource-set", {
 
                 refute("content" in ro.resources["/foo"]);
                 refute("backend" in ro.resources["/foo"]);
+                refute("combine" in ro.resources["/foo"]);
 
                 done();
             });
@@ -211,6 +212,32 @@ buster.testCase("resource-set", {
 
                 refute("content" in ro.resources["/foo"]);
                 refute("etag" in ro.resources["/foo"]);
+                refute("combine" in ro.resources["/foo"]);
+
+                done();
+            });
+        },
+
+        "should handle resources with combine": function (done) {
+            var r = resourceSet.create({
+                resources: {
+                    "/foo":{"combine":["/bar", "/baz"]},
+                    "/bar":{"content":"1234"},
+                    "/baz":{"content":"abcd"}
+                }
+            });
+
+            r.getReadOnly(function (err, ro) {
+                assert.isUndefined(err);
+                assert.match(ro, {
+                    resources: {
+                        "/foo":{"combine":["/bar", "/baz"]},
+                    }
+                });
+
+                refute("content" in ro.resources["/foo"]);
+                refute("etag" in ro.resources["/foo"]);
+                refute("backend" in ro.resources["/foo"]);
 
                 done();
             });
