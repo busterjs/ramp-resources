@@ -3,8 +3,6 @@ var assert = buster.assert;
 var refute = buster.refute;
 var busterResources = require("./../lib/buster-resources");
 
-// For legacy reasons, most of the resource-set tests are encapsulated in session
-// and capture tests.
 buster.testCase("resource-set", {
     setUp: function () {
         this.br = Object.create(busterResources);
