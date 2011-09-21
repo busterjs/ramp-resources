@@ -2,6 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 var busterResources = require("./../lib/buster-resources");
+var resourceSet = require("./../lib/resource-set");
 
 buster.testCase("resource-set", {
     setUp: function () {
