@@ -128,6 +128,16 @@ buster.testCase("resource-set", {
         });
     },
 
+    "test adding file by path with custom resource path": function (done) {
+        var rs = resourceSet.create({});
+        rs.addFile(__filename, "/custom.txt");
+
+        rs.getResource("/custom.txt", function (err, resource) {                
+            assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
+            done();
+        });
+    },
+
     "validations": {
         "should fail if load entry misses corresponding resources entry": function (done) {
             try {
