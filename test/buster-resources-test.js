@@ -1,7 +1,6 @@
 var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
-var fs = require("fs");
 var http = require("http");
 
 var busterResources = require("./../lib/buster-resources");
@@ -170,26 +169,6 @@ buster.testCase("Buster resources", {
             this.br.getResource("/test", function (err, resource) {
                 assert.equals("something", err);
                 // TODO: specify what 'resource.content' should be.
-                done();
-            });
-        },
-
-        "test adding file by path": function (done) {
-            this.rs.addFile(__filename);
-
-            this.br.getResource(__filename, function (err, resource) {                
-                assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
-                done();
-            });
-        },
-
-        "test adding file by path with missing file": function (done) {
-            var filename = "/tmp/i-sure-hope-this-file-does-not-exist" + new Date().getTime().toString();
-            this.rs.addFile(filename);
-
-            this.br.getResource(filename, function (err, resource) {
-                assert.isUndefined(resource);
-                assert.equals(err.code, "ENOENT");
                 done();
             });
         },

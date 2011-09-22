@@ -1,3 +1,4 @@
+var fs = require("fs");
 var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
@@ -101,6 +102,28 @@ buster.testCase("resource-set", {
             assert.match(body,'<script src="' + r.contextPath  + '/foo"');
             assert.match(body, '<script src="' + r.contextPath  + '/bar"');
             assert.match(body, '<script src="' + r.contextPath  + '/baz"');
+            done();
+        });
+    },
+
+    "test adding file by path": function (done) {
+        var rs = resourceSet.create({});
+        rs.addFile(__filename);
+
+        rs.getResource(__filename, function (err, resource) {                
+            assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
+            done();
+        });
+    },
+
+    "test adding file by path with missing file": function (done) {
+        var filename = "/tmp/i-sure-hope-this-file-does-not-exist" + new Date().getTime().toString();
+        var rs = resourceSet.create({});
+        rs.addFile(filename);
+
+        rs.getResource(filename, function (err, resource) {
+            assert.isUndefined(resource);
+            assert.equals(err.code, "ENOENT");
             done();
         });
     },
