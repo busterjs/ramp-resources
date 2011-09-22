@@ -41,6 +41,55 @@ buster.testCase("resource-set", {
         }
     },
 
+    "test adding multiple entries in prependToLoad": function () {
+        var r = this.br.createResourceSet({
+            load: ["/foo"],
+            resources: {
+                "/foo": {content:"a"},
+                "/bar": {content:"b"},
+                "/baz": {content:"b"}
+            }
+        });
+
+        r.prependToLoad(["/bar", "/baz"]);
+
+        assert.equals(r.load, ["/bar", "/baz", "/foo"]);
+    },
+
+    "test adding multiple entries in prependToLoad where one is not present": function () {
+        var r = this.br.createResourceSet({
+            load: ["/foo"],
+            resources: {
+                "/foo": {content:"a"},
+                "/bar": {content:"b"}
+            }
+        });
+
+        assert.exception(function () {
+            r.prependToLoad(["/bar", "/baz"]);
+        });
+        assert.equals(r.load, ["/foo"]);
+    },
+
+    "test adding existing entry in prependToLoad": function (done) {
+        var r = this.br.createResourceSet({
+            load: ["/foo"],
+            resources: {
+                "/foo": {content:"a"},
+                "/bar": {content:"b"}
+            }
+        });
+
+        try {
+            r.prependToLoad(["/bar", "/foo"]);
+        } catch (e) {
+            assert.match(e.message, "Can not prepend")
+            assert.match(e.message, "/foo");
+            assert.equals(r.load, ["/foo"]);
+            done();
+        }
+    },
+
     "test all entries in 'load' are script injected to root resource": function (done) {
         var r = this.br.createResourceSet({resources:{}});
 
