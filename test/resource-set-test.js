@@ -138,6 +138,11 @@ buster.testCase("resource-set", {
         });
     },
 
+    "test getResource fails for none existing resource": function () {
+        var rs = resourceSet.create({});
+        assert.isFalse(rs.getResource("/foo.txt", function(){}));
+    },
+
     "validations": {
         "should fail if load entry misses corresponding resources entry": function (done) {
             try {
