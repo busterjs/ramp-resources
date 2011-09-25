@@ -143,6 +143,45 @@ buster.testCase("resource-set", {
         assert.isFalse(rs.getResource("/foo.txt", function(){}));
     },
 
+    "test deleting resource": function () {
+        var rs = resourceSet.create({resources:{"/foo":{content:"foo"}}});
+        rs.removeResource("/foo");
+        refute("/foo" in rs.resources);
+    },
+
+    "test deleting resource removes it from load": function () {
+        var rs = resourceSet.create({load:["/foo"],resources:{"/foo":{content:"foo"}}});
+        rs.removeResource("/foo");
+        assert.equals(rs.load, []);
+    },
+
+    "test deleting resource does not remove entries before itself in load": function () {
+        var rs = resourceSet.create({load:["/bar", "/foo"],resources:{
+            "/foo":{content:"foo"},
+            "/bar":{content:"bar"}
+        }});
+
+        rs.removeResource("/foo");
+        assert.equals(rs.load, ["/bar"]);
+    },
+
+    "test deleting resource does not remove entries after itself in load": function () {
+        var rs = resourceSet.create({load:["/foo", "/bar"],resources:{
+            "/foo":{content:"foo"},
+            "/bar":{content:"bar"}
+        }});
+
+        rs.removeResource("/foo");
+        assert.equals(rs.load, ["/bar"]);
+    },
+
+    "test deleting none existing resource": function () {
+        var rs = resourceSet.create({resources:{"/foo":{content:"foo"}}});
+        assert.exception(function () {
+            rs.removeResource("/bar");
+        });
+    },
+
     "validations": {
         "should fail if load entry misses corresponding resources entry": function (done) {
             try {
