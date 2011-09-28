@@ -182,6 +182,15 @@ buster.testCase("resource-set", {
         });
     },
 
+    "test getting none existent resource": function (done) {
+        var rs = resourceSet.create({resources:{"/foo":{content:"foo"}}});
+        rs.getResource("/bar", function (err, resource) {
+            assert.isUndefined(resource);
+            assert.equals(err, resourceSet.RESOURCE_NOT_FOUND);
+            done();
+        });
+    },
+
     "validations": {
         "should fail if load entry misses corresponding resources entry": function (done) {
             try {

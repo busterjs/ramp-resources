@@ -132,7 +132,7 @@ buster.testCase("Buster resources", {
 
         "test does not serve none existing resources": function (done) {        
             this.br.getResource("/does/not/exist.js", function (err, resource) {
-                assert.equals(err, busterResources.RESOURCE_NOT_FOUND);
+                assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
                 assert.isUndefined(resource);
                 done();
             });
@@ -245,7 +245,7 @@ buster.testCase("Buster resources", {
                 self.br.removeResourceSet(rs);
 
                 self.br.getResource(resourcePath, function (err, resource) {
-                    assert.equals(err, busterResources.RESOURCE_NOT_FOUND);
+                    assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
                     assert.isUndefined(resource);
                     done();
                 });
@@ -327,7 +327,7 @@ buster.testCase("Buster resources", {
             this.br.gc();
 
             this.br.getResource(rs.contextPath + "/myfile.js", function (err, resource) {
-                assert.equals(err, self.br.RESOURCE_NOT_FOUND);
+                assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
                 done();
             });
         },
