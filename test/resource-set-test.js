@@ -130,13 +130,24 @@ buster.testCase("resource-set", {
 
     "test adding file by path with custom resource path": function (done) {
         var rs = resourceSet.create({});
-        rs.addFile(__filename, "/custom.txt");
+        rs.addFile(__filename, {path: "/custom.txt"});
 
         rs.getResource("/custom.txt", function (err, resource) {                
             assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
             done();
         });
     },
+
+    "test adding file by path with options": function (done) {
+        var rs = resourceSet.create({});
+        rs.addFile(__filename, {headers: {"X-Foo": "Bar"}});
+
+        rs.getResource(__filename, function (err, resource) {
+            assert.match(resource.headers, {"X-Foo": "Bar"});
+            done();
+        });
+    },
+
 
     "test getResource fails for none existing resource": function () {
         var rs = resourceSet.create({});
