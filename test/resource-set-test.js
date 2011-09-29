@@ -91,26 +91,6 @@ buster.testCase("resource-set", {
         }
     },
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     "test appending entries to load post creation": function () {
         var r = this.br.createResourceSet({
             load: ["/foo"],
@@ -183,28 +163,6 @@ buster.testCase("resource-set", {
             done();
         }
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     "test all entries in 'load' are script injected to root resource": function (done) {
         var r = this.br.createResourceSet({resources:{}});
