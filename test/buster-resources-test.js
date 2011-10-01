@@ -70,7 +70,8 @@ buster.testCase("Buster resources", {
         },
 
         "test adding resource post create": function (done) {
-            this.rs.addResource("/roflmao.txt", {"content": "Roflmao!"});
+            var r = this.rs.addResource("/roflmao.txt", {"content": "Roflmao!"});
+            assert(busterResourcesResource.isPrototypeOf(r));
 
             this.br.getResource("/roflmao.txt", function (err, resource) {
                 assert.equals(resource.content, "Roflmao!");

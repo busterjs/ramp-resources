@@ -3,6 +3,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 var busterResources = require("./../lib/buster-resources");
+var busterResourcesResource = require("./../lib/resource");
 var resourceSet = require("./../lib/resource-set");
 
 buster.testCase("resource-set", {
@@ -181,7 +182,8 @@ buster.testCase("resource-set", {
 
     "test adding file by path": function (done) {
         var rs = resourceSet.create({});
-        rs.addFile(__filename);
+        var r = rs.addFile(__filename);
+        assert(busterResourcesResource.isPrototypeOf(r));
 
         rs.getResource(__filename, function (err, resource) {                
             assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
