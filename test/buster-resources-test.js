@@ -518,6 +518,28 @@ buster.testCase("Buster resources", {
                 }).end();
             },
 
+            "should error for resource erroring resource": function (done) {
+                this.rs.addFile("/tmp/does-not-exist");
+                h.request({path: this.rs.contextPath + "/tmp/does-not-exist"}, function (res, body) {
+                    assert.equals(500, res.statusCode);
+                    var parsed = JSON.parse(body);
+                    assert.equals(parsed.code, "ENOENT");
+                    done();
+                }).end();
+            },
+
+            "should error for failing combined resource": function (done) {
+                this.rs.addFile("/tmp/does-not-exist");
+                this.rs.addResource("/test", {combine: ["/foo.js", "/tmp/does-not-exist"]});
+
+                h.request({path: this.rs.contextPath + "/test"}, function (res, body) {
+                    assert.equals(500, res.statusCode);
+                    var parsed = JSON.parse(body);
+                    assert.equals(parsed.code, "ENOENT");
+                    done();
+                }).end();                
+            },
+
             "on combined resources": {
                 setUp: function () {
                     this.rs.addResource("/bundle.js", {
