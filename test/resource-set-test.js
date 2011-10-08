@@ -223,7 +223,7 @@ buster.testCase("resource-set", {
         var r = rs.addFile(__filename);
         assert(busterResourcesResource.isPrototypeOf(r));
 
-        rs.getResource(__filename, function (err, resource) {                
+        rs.getResource(__filename, function (err, resource) {
             assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
             done();
         });
@@ -235,7 +235,7 @@ buster.testCase("resource-set", {
         rs.addFile(filename);
 
         rs.getResource(filename, function (err, resource) {
-            assert.isUndefined(resource);
+            refute.defined(resource);
             assert.equals(err.code, "ENOENT");
             done();
         });
@@ -245,7 +245,7 @@ buster.testCase("resource-set", {
         var rs = resourceSet.create({});
         rs.addFile(__filename, {path: "/custom.txt"});
 
-        rs.getResource("/custom.txt", function (err, resource) {                
+        rs.getResource("/custom.txt", function (err, resource) {
             assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
             done();
         });
@@ -309,7 +309,7 @@ buster.testCase("resource-set", {
     "test getting none existent resource": function (done) {
         var rs = resourceSet.create({resources:{"/foo":{content:"foo"}}});
         rs.getResource("/bar", function (err, resource) {
-            assert.isUndefined(resource);
+            refute.defined(resource);
             assert.equals(err, resourceSet.RESOURCE_NOT_FOUND);
             done();
         });
@@ -415,7 +415,7 @@ buster.testCase("resource-set", {
             });
 
             r.getReadOnly(function (err, ro) {
-                assert.isUndefined(err);
+                refute.defined(err);
                 assert.match(ro, {
                     load: ["/foo"],
                     resources: {
@@ -439,7 +439,7 @@ buster.testCase("resource-set", {
             });
 
             r.getReadOnly(function (err, ro) {
-                assert.isUndefined(err);
+                refute.defined(err);
                 assert.match(ro, {
                     resources: {
                         "/foo":{"etag":"1234"},
@@ -462,7 +462,7 @@ buster.testCase("resource-set", {
             });
 
             r.getReadOnly(function (err, ro) {
-                assert.isUndefined(err);
+                refute.defined(err);
                 assert.match(ro, {
                     resources: {
                         "/foo":{"backend":"http://foo.com"},
@@ -487,7 +487,7 @@ buster.testCase("resource-set", {
             });
 
             r.getReadOnly(function (err, ro) {
-                assert.isUndefined(err);
+                refute.defined(err);
                 assert.match(ro, {
                     resources: {
                         "/foo":{"combine":["/bar", "/baz"]},

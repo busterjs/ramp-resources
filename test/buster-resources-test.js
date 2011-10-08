@@ -24,7 +24,7 @@ buster.testCase("Buster resources", {
             resources: {"/": {content: "hullo!"}}
         });
 
-        
+
         buster.assert.match(rs.resources["/"].headers, {"Content-Type": "text/html"});
         rs.getResource("/", function (err, resource) {
             buster.assert.match(resource.headers, {"Content-Type": "text/html"});
@@ -54,7 +54,7 @@ buster.testCase("Buster resources", {
         busterResources.validateResource("whatever");
         assert(busterResourcesResource.validate.calledOnce);
         assert(busterResourcesResource.validate.calledWith("whatever"));
-        
+
     },
 
     "resource sets": {
@@ -119,7 +119,7 @@ buster.testCase("Buster resources", {
         "test hosts resources with custom headers": function (done) {
             this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
             this.br.getResource("/baz.js", function (err, resource) {
-                assert.equals(resource.headers["Content-Type"], "text/custom");                
+                assert.equals(resource.headers["Content-Type"], "text/custom");
                 done();
             });
         },
@@ -131,10 +131,10 @@ buster.testCase("Buster resources", {
             });
         },
 
-        "test does not serve none existing resources": function (done) {        
+        "test does not serve none existing resources": function (done) {
             this.br.getResource("/does/not/exist.js", function (err, resource) {
                 assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
-                assert.isUndefined(resource);
+                refute.defined(resource);
                 done();
             });
         },
@@ -241,13 +241,13 @@ buster.testCase("Buster resources", {
             var resourcePath = "/yay/myfile.js";
 
             this.br.getResource(resourcePath, function (err, resource) {
-                assert.isUndefined(err);
-                refute.isUndefined(resource);
+                refute.defined(err);
+                assert.defined(resource);
                 self.br.removeResourceSet(rs);
 
                 self.br.getResource(resourcePath, function (err, resource) {
                     assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
-                    assert.isUndefined(resource);
+                    refute.defined(resource);
                     done();
                 });
             });
@@ -373,7 +373,7 @@ buster.testCase("Buster resources", {
             this.spy(this.br, "startCacheInvalidationTimeout");
             this.br.startCacheInvalidationTimeout();
             clock.tick(3600000 * 4);
-            
+
             buster.assert.equals(this.br.startCacheInvalidationTimeout.callCount, 5);
         },
 
@@ -466,7 +466,7 @@ buster.testCase("Buster resources", {
 
             "should proxy requests to /other": function (done) {
                 this.br.getResource(this.rs.contextPath + "/other/file.js", function (err, resource) {
-                    assert.isUndefined(err);
+                    refute.defined(err);
                     assert.equals(resource.content.toString("utf8"), "PROXY: /other/file.js");
                     assert.equals(resource.headers["x-buster-backend"], "Yes");
                     done();
@@ -477,7 +477,7 @@ buster.testCase("Buster resources", {
                 this.rs.contextPath = "/foo";
 
                 this.br.getResource(this.rs.contextPath + "/other/file.js", function (err, resource) {
-                    assert.isUndefined(err);
+                    refute.defined(err);
                     assert.equals(resource.content.toString("utf8"), "PROXY: /other/file.js");
                     assert.equals(resource.headers["x-buster-backend"], "Yes");
                     done();
@@ -537,7 +537,7 @@ buster.testCase("Buster resources", {
                     var parsed = JSON.parse(body);
                     assert.equals(parsed.code, "ENOENT");
                     done();
-                }).end();                
+                }).end();
             },
 
             "on combined resources": {
