@@ -173,9 +173,47 @@ buster.testCase("resource-set", {
 
         r.getResource("/", function (err, resource) {
             var body = resource.content;
+            assert.match(body, '<!DOCTYPE html><html><head></head><body>');
             assert.match(body,'<script src="' + r.contextPath  + '/foo"');
             assert.match(body, '<script src="' + r.contextPath  + '/bar"');
             assert.match(body, '<script src="' + r.contextPath  + '/baz"');
+            assert.match(body, '</body></html>');
+
+            done();
+        });
+    },
+
+    "test root resource with no html and empty load": function (done) {
+        var r = this.br.createResourceSet({resources:{
+            "/": {
+                content: "Hello, World!"
+            }
+        }});
+
+        r.getResource("/", function (err, resource) {
+            assert.equals(resource.content, "Hello, World!");
+            done();
+        });
+    },
+
+    "test root resource with no html and load entries": function (done) {
+        var r = this.br.createResourceSet({
+            load: ["/foo.js"],
+            resources: {
+                "/": {
+                    content: "Hello, World!"
+                },
+                "/foo.js": {
+                    content: "var test = 5"
+                }
+            }
+        });
+
+        r.getResource("/", function (err, resource) {
+            assert.equals(resource.content,
+                          'Hello, World!<script src="'
+                          + r.contextPath  + '/foo.js" type="text/javascript">'
+                          + '</script>\n');
             done();
         });
     },
