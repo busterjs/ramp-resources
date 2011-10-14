@@ -32,6 +32,19 @@ buster.testCase("resource-set", {
         assert.equals(r.load, ["/bar", "/foo"]);
     },
 
+    "should prepend a single entry to load post creation": function () {
+        var r = this.br.createResourceSet({
+            load: ["/foo"],
+            resources: {
+                "/foo":{"content":"foo"},
+                "/bar": {"content":"bar"}
+            }
+        });
+
+        r.prependToLoad("/bar");
+        assert.equals(r.load, ["/bar", "/foo"]);
+    },
+
     "test prepending entry to load post creation that isn't in 'resources'": function (done) {
         var r = this.br.createResourceSet({resources: {}});
 
@@ -90,6 +103,19 @@ buster.testCase("resource-set", {
             assert.equals(r.load, ["/foo"]);
             done();
         }
+    },
+
+    "should load a single resource": function () {
+        var r = this.br.createResourceSet({
+            load: [],
+            resources: {
+                "/foo":{"content":"foo"},
+                "/bar": {"content":"bar"}
+            }
+        });
+
+        r.appendToLoad("/bar");
+        assert.equals(r.load, ["/bar"]);
     },
 
     "test appending entries to load post creation": function () {
