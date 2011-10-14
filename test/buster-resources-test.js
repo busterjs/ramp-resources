@@ -24,7 +24,6 @@ buster.testCase("Buster resources", {
             resources: {"/": {content: "hullo!"}}
         });
 
-
         buster.assert.match(rs.resources["/"].headers, {"Content-Type": "text/html"});
         rs.getResource("/", function (err, resource) {
             buster.assert.match(resource.headers, {"Content-Type": "text/html"});
