@@ -352,13 +352,10 @@ buster.testCase("resource-set", {
             }
         },
 
-        "should fail when not an object": function (done) {
-            try {
+        "should not fail when creating an empty resource set": function () {
+            refute.exception(function () {
                 var r = this.br.createResourceSet()
-            } catch (e) {
-                assert.equals(e.message, "Resource object is null or undefined.");
-                done();
-            }
+            }.bind(this));
         },
 
         "should fail if neither etag, content, backend or combine is present": function () {
