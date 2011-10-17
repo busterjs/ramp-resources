@@ -316,6 +316,25 @@ buster.testCase("resource-set", {
         });
     },
 
+    "test creating with base64 encoded data": function (done) {
+        var aBuffer = new Buffer([92, 52, 39, 11, 79]);
+
+        var rs = this.br.createResourceSet({
+            resources: {
+                "/foo":{
+                    content: base64.encode(aBuffer),
+                    base64Encoded: true
+                },
+            }
+        });
+
+        rs.getResource("/foo", function (err, resource) {
+            refute.defined(err);
+            assert.equals(aBuffer, resource.content);
+            done();
+        });
+    },
+
     "validations": {
         "should fail if load entry misses corresponding resources entry": function (done) {
             try {
