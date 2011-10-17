@@ -5,6 +5,7 @@ var refute = buster.refute;
 var busterResources = require("./../lib/buster-resources");
 var busterResourcesResource = require("./../lib/resource");
 var resourceSet = require("./../lib/resource-set");
+var base64 = require("base64");
 
 buster.testCase("resource-set", {
     setUp: function () {
@@ -500,6 +501,25 @@ buster.testCase("resource-set", {
 
                 done();
             });
+        },
+
+        "should handle resource with buffer as content": function (done) {
+            var aBuffer = new Buffer([92, 52, 39, 11, 79]);
+            var r = this.br.createResourceSet({
+                load: ["/foo"],
+                resources: {
+                    "/foo":{"content": aBuffer},
+                }
+            });
+
+            r.getReadOnly(function (err, ro) {
+                refute.defined(err);
+                var resource = ro.resources["/foo"];
+                assert.equals(resource.content, base64.encode(aBuffer));
+                assert(resource.base64Encoded);
+
+                done();
+            });         
         }
     }
 });
