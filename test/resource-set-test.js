@@ -361,6 +361,57 @@ buster.testCase("resource-set", {
         });
     },
 
+    "test getting plain resource via context path": function (done) {
+        var contextPath = "/123abc";
+        var rs = this.br.createResourceSet({
+            contextPath: contextPath,
+            resources: {
+                "/foo":{
+                    content: "ohai"
+                },
+            }
+        });
+
+        rs.getResource("/foo", function (err, resource) {
+            assert.equals(err, resourceSet.RESOURCE_NOT_FOUND);
+
+            rs.getResource(contextPath + "/foo", function (err, resource) {
+                refute.defined(err);
+                assert.equals(resource.content, "ohai");
+                done();
+            });
+        });
+        
+    },
+
+    "test getting combined resource via context path": function (done) {
+        var contextPath = "/123abc";
+        var rs = this.br.createResourceSet({
+            contextPath: contextPath,
+            resources: {
+                "/a": {
+                    content: "a"
+                },
+                "/b": {
+                    content: "b"
+                },
+                "/foo":{
+                    combine: ["/a", "/b"]
+                },
+            }
+        });
+
+        rs.getResource("/foo", function (err, resource) {
+            assert.equals(err, resourceSet.RESOURCE_NOT_FOUND);
+
+            rs.getResource(contextPath + "/foo", function (err, resource) {
+                refute.defined(err);
+                assert.equals(resource.content, "a\nb\n");
+                done();
+            });
+        });        
+    },
+
     "validations": {
         "should fail if load entry misses corresponding resources entry": function (done) {
             try {
