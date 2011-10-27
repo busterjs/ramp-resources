@@ -4,12 +4,53 @@ var assert = buster.assert;
 var refute = buster.refute;
 var busterResources = require("./../lib/buster-resources");
 var busterResourcesResource = require("./../lib/resource");
+var busterResourcesResourceSet = require("./../lib/resource-set");
 var resourceSet = require("./../lib/resource-set");
 var base64 = require("base64");
+var http = require("http");
+var h = require("./test-helper");
+
+function assertBodyIsRootResourceProcessed(body, resourceSet) {
+    assert.match(body, '<script src="' + resourceSet.contextPath  + '/foo.js"');
+}
+
+var basicResourceSet = {
+    load: ["/foo.js"],
+    resources: {
+        "/foo.js": {
+            content: "var a = 5 + 5;"
+        }
+    }
+};
 
 buster.testCase("resource-set", {
     setUp: function () {
         this.br = Object.create(busterResources);
+    },
+
+    "test root resource defaults to text/html content-type": function (done) {
+        var rs = this.br.createResourceSet({
+            load: [],
+            resources: {"/": {content: "hullo!"}}
+        });
+
+        buster.assert.match(rs.resources["/"].headers, {"Content-Type": "text/html"});
+        rs.getResource("/", function (err, resource) {
+            buster.assert.match(resource.headers, {"Content-Type": "text/html"});
+            done();
+        });
+    },
+
+    "test root resource as a buffer": function (done) {
+        var rs = this.br.createResourceSet({
+            load: [],
+            resources: {"/": {content: new Buffer([0x3c, 0x62, 0x6f, 0x64, 0x79, 0x3e, 0x3c, 0x2f, 0x62, 0x6f, 0x64, 0x79, 0x3e])}}
+        });
+
+        rs.getResource("/", function (err, resource) {
+            assert.match(resource.content, /^<body>/);
+            done();
+        });
     },
 
     "test creating with blank object": function () {
@@ -18,6 +59,17 @@ buster.testCase("resource-set", {
         assert.equals(r.load.length, 0);
 
         assert.equals("", r.contextPath);
+    },
+
+    "test adding resource post create": function (done) {
+        var rs = this.br.createResourceSet({});
+        var r = rs.addResource("/roflmao.txt", {"content": "Roflmao!"});
+        assert(busterResourcesResource.isPrototypeOf(r));
+
+        rs.getResource("/roflmao.txt", function (err, resource) {
+            assert.equals(resource.content, "Roflmao!");
+            done();
+        });
     },
 
     "test prepending entries to load post creation": function () {
@@ -31,6 +83,336 @@ buster.testCase("resource-set", {
 
         r.prependToLoad(["/bar"]);
         assert.equals(r.load, ["/bar", "/foo"]);
+    },
+
+    "test adding new root resource post create": function (done) {
+        var rs = this.br.createResourceSet(basicResourceSet);
+        rs.addResource("/", {content: "hullo"});
+
+        rs.getResource("/", function (err, resource) {
+            assertBodyIsRootResourceProcessed(resource.content, rs);
+            done();
+        });
+    },
+
+    "test adding new root resouce with custom content-type": function (done) {
+        var self = this;
+        var rs = this.br.createResourceSet({});
+        rs.addResource("/", {content: "hullo", headers: {"Content-Type": "text/wtf"}});
+
+        rs.getResource("/", function (err, resource) {
+            assert.equals(resource.headers["Content-Type"], "text/wtf");
+            done();
+        });
+    },
+
+    "test serving buffer resources": function (done) {
+        var rs = this.br.createResourceSet({});
+        rs.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
+
+        rs.getResource("/hullo.txt", function (err, resource) {
+            assert.equals(resource.content, "PNG");
+            done();
+        });
+    },
+
+    "test provides resources created with resoruce set": function (done) {
+        var rs = this.br.createResourceSet(basicResourceSet);
+        rs.getResource("/foo.js", function (err, resource) {
+            assert.equals(resource.content, "var a = 5 + 5;");
+            assert.equals(resource.headers["Content-Type"], "application/javascript");
+            done();
+        });
+    },
+
+    "test hosts resources with custom headers": function (done) {
+        var rs = this.br.createResourceSet({});
+        rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
+        rs.getResource("/baz.js", function (err, resource) {
+            assert.equals(resource.headers["Content-Type"], "text/custom");
+            done();
+        });
+    },
+
+    "test provides default root resource": function (done) {
+        var rs = this.br.createResourceSet({});
+        rs.getResource("/", function (err, resource) {
+            assert.equals(resource.headers["Content-Type"], "text/html");
+            done();
+        });
+    },
+
+    "test does not serve none existing resources": function (done) {
+        var rs = this.br.createResourceSet({});
+        rs.getResource("/does/not/exist.js", function (err, resource) {
+            assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
+            refute.defined(resource);
+            done();
+        });
+    },
+
+    "test inserts scripts into root resource": function (done) {
+        var rs = this.br.createResourceSet(basicResourceSet);
+        rs.getResource("/", function (err, resource) {
+            assertBodyIsRootResourceProcessed(resource.content, rs);
+            done();
+        });
+    },
+
+    "test content is function": function (done) {
+        var rs = this.br.createResourceSet({});
+        rs.addResource("/test", {
+            content: function (promise) {
+                promise.resolve("Test");
+            }
+        });
+
+        rs.getResource("/test", function (err, resource) {
+            assert.equals("Test", resource.content);
+            done();
+        });
+    },
+
+    "test content is function with failure": function (done) {
+        var rs = this.br.createResourceSet({});
+
+        rs.addResource("/test", {
+            content: function (promise) {
+                promise.reject("something");
+            }
+        });
+
+        rs.getResource("/test", function (err, resource) {
+            assert.equals("something", err);
+            // TODO: specify what 'resource.content' should be.
+            done();
+        });
+    },
+
+    "mime types": {
+        setUp: function () {
+            this.rs = this.br.createResourceSet(basicResourceSet);
+        },
+
+        "should serve javascript with reasonable mime-type": function (done) {
+            this.rs.getResource(this.rs.contextPath + "/foo.js", function (err, resource) {
+                assert.match(resource.headers, {"Content-Type": "application/javascript"});
+                done();
+            });
+        },
+
+        "should not overwrite custom mime-type": function (done) {
+            this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
+            this.rs.getResource(this.rs.contextPath + "/baz.js", function (err, resource) {
+                assert.match(resource.headers, {"Content-Type": "text/custom"});
+                done();
+            });
+        }
+    },
+
+    "bundles": {
+        setUp: function () {
+            this.rs = this.br.createResourceSet(basicResourceSet);
+            this.rs.addResource("/bundle.js", {
+                combine: ["/foo.js", "/bar/baz.js"],
+                headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
+            });
+
+            this.rs.addResource("/bar/baz.js", {
+                content: "var b = 5 + 5; // Yes",
+                headers: {"Content-Type": "text/custom"}
+            });
+        },
+
+        "should serve combined contents with custom header": function (done) {
+            this.rs.getResource(this.rs.contextPath + "/bundle.js", function (err, resource) {
+                assert.equals(resource.content, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
+                assert.match(resource.headers, {
+                    "Expires": "Sun, 15 Mar 2012 22:22 37 GMT"
+                });
+                done();
+            });
+        },
+
+        "should serve combined contents minified": function (done) {
+            this.rs.addResource("/bundle.min.js", {
+                combine: ["/bundle.js"],
+                minify: true
+            });
+
+            this.rs.getResource(this.rs.contextPath + "/bundle.min.js", function (err, resource) {
+                assert.equals(resource.content, "var a=10,b=10");
+                done();
+            });
+        },
+
+        "should serve single resource contents minified": function (done) {
+            this.rs.addResource("/foo.min.js", {
+                content: "var a = 5 + 5;",
+                minify: true
+            });
+
+            this.rs.getResource(this.rs.contextPath + "/foo.min.js", function (err, resource) {
+                assert.equals(resource.content, "var a=10");
+                done();
+            });
+        }
+    },
+
+    "proxy requests": {
+        setUp: function (done) {
+            var port = 17171;
+
+            this.proxyBackend = http.createServer(function (req, res) {
+                res.writeHead(200, { "X-Buster-Backend": "Yes" });
+                res.end("PROXY: " + req.url);
+            });
+
+            this.proxyBackend.listen(port, done);
+
+            this.rs = this.br.createResourceSet(basicResourceSet);
+            this.rs.addResource("/other", {
+                backend: "http://localhost:" + port + "/"
+            });
+        },
+
+        tearDown: function (done) {
+            this.proxyBackend.on("close", done);
+            this.proxyBackend.close();
+        },
+
+        "should proxy requests to /other": function (done) {
+            this.rs.getResource(this.rs.contextPath + "/other/file.js", function (err, resource) {
+                refute.defined(err);
+                assert.equals(resource.content.toString("utf8"), "PROXY: /other/file.js");
+                assert.equals(resource.headers["x-buster-backend"], "Yes");
+                done();
+            });
+        },
+
+        "should honor context path": function (done) {
+            this.rs.contextPath = "/foo";
+
+            this.rs.getResource(this.rs.contextPath + "/other/file.js", function (err, resource) {
+                refute.defined(err);
+                assert.equals(resource.content.toString("utf8"), "PROXY: /other/file.js");
+                assert.equals(resource.headers["x-buster-backend"], "Yes");
+                done();
+            });
+        }
+    },
+
+    "via http": {
+        setUp: function (done) {
+            var self = this;
+            this.rs = this.br.createResourceSet(basicResourceSet);
+
+            this.server = http.createServer(function (req, res) {
+                if (self.rs.getResourceViaHttp(req, res)) return;
+
+                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+                res.end();
+            });
+            this.server.listen(h.SERVER_PORT, done);
+        },
+
+        tearDown: function (done) {
+            this.server.on("close", done);
+            this.server.close();
+        },
+
+        "should get resources": function (done) {
+            h.request({path: this.rs.contextPath + "/foo.js"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "var a = 5 + 5;");
+                done();
+            }).end();
+        },
+
+        "should not respond for none existing resources": function (done) {
+            h.request({path: this.rs.contextPath + "/does-not-exist.js"}, function (res, body) {
+                assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                done();
+            }).end();
+        },
+
+        "should error for resource erroring resource": function (done) {
+            this.rs.addFile("/tmp/does-not-exist");
+            h.request({path: this.rs.contextPath + "/tmp/does-not-exist"}, function (res, body) {
+                assert.equals(500, res.statusCode);
+                var parsed = JSON.parse(body);
+                assert.equals(parsed.code, "ENOENT");
+                done();
+            }).end();
+        },
+
+        "should error for failing combined resource": function (done) {
+            this.rs.addFile("/tmp/does-not-exist");
+            this.rs.addResource("/test", {combine: ["/foo.js", "/tmp/does-not-exist"]});
+
+            h.request({path: this.rs.contextPath + "/test"}, function (res, body) {
+                assert.equals(500, res.statusCode);
+                var parsed = JSON.parse(body);
+                assert.equals(parsed.code, "ENOENT");
+                done();
+            }).end();
+        },
+
+        "on combined resources": {
+            setUp: function () {
+                this.rs.addResource("/bundle.js", {
+                    combine: ["/foo.js", "/bar/baz.js"],
+                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
+                });
+
+                this.rs.addResource("/bar/baz.js", {
+                    content: "var b = 5 + 5; // Yes",
+                    headers: {"Content-Type": "text/custom"}
+                });
+            },
+
+            "should serve combined contents with custom header": function (done) {
+                h.request({path: this.rs.contextPath + "/bundle.js"}, function (res, body) {
+                    assert.equals(200, res.statusCode);
+                    assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
+                    assert.match(res.headers, {
+                        "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
+                    });
+                    done();
+                }).end();
+            }
+        },
+
+        "on proxies": {
+            setUp: function (done) {
+                var port = 17171;
+
+                this.proxyBackend = http.createServer(function (req, res) {
+                    res.writeHead(201, { "X-Buster-Backend": "Yes" });
+                    res.end("PROXY: " + req.url);
+                });
+
+                this.proxyBackend.listen(port, done);
+
+                this.rs.addResource("/other", {
+                    backend: "http://localhost:" + port + "/"
+                });
+            },
+
+            tearDown: function (done) {
+                this.proxyBackend.on("close", done);
+                this.proxyBackend.close();
+            },
+
+            "should proxy requests to /other": function (done) {
+                h.request({path: this.rs.contextPath + "/other/file.js"}, function (res, body) {
+                    assert.equals(201, res.statusCode);
+                    assert.equals(body, "PROXY: /other/file.js");
+                    assert.equals(res.headers["x-buster-backend"], "Yes");
+                    done();
+                }).end();;
+            }
+        }
     },
 
     "should prepend a single entry to load post creation": function () {
