@@ -68,7 +68,7 @@ buster.testCase("Buster resources", {
                 }
             });
 
-            this.br.getResource("/test.js", function (err, resource) {
+            this.br.getResource("/rs2/test.js", function (err, resource) {
                 assert.equals(resource.content, "Hello, World!");
                 assert.match(resource.headers, {"X-Foo": "666"});
                 done();
