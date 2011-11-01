@@ -261,13 +261,14 @@ buster.testCase("Buster resources", {
             this.server.close();
         },
 
-        "// should retrieve cached resource": function (done) {
+        "should retrieve cached resource": function (done) {
             this.br.createResourceSet({
                 contextPath: "/a",
                 resources: {
                     "/foo.js": {
                         content: "Hello from foo",
-                        etag: "1234"
+                        etag: "1234",
+                        headers: {"X-Foo": "Bar"}
                     }
                 }
             });
@@ -283,6 +284,8 @@ buster.testCase("Buster resources", {
 
             h.request({path: "/b/foo.js", method: "GET"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
+                assert.match(res.headers, {"x-foo": "Bar"});
+                assert.equals(body, "Hello from foo");
                 done();
             }).end();
         }
