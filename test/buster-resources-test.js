@@ -1,6 +1,8 @@
 var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
+var http = require("http");
+var h = require("./test-helper");
 
 var busterResources = require("./../lib/buster-resources");
 var busterResourcesResourceSet = require("./../lib/resource-set");
@@ -238,6 +240,51 @@ buster.testCase("Buster resources", {
             clock.tick(3600000 * 4);
 
             buster.assert.equals(this.br.startCacheInvalidationTimeout.callCount, 5);
+        }
+    },
+
+    "via http": {
+        setUp: function (done) {
+            var self = this;
+
+            this.server = http.createServer(function (req, res) {
+                if (self.br.getResourceViaHttp(req, res)) return;
+
+                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+                res.end();
+            });
+            this.server.listen(h.SERVER_PORT, done);
+        },
+
+        tearDown: function (done) {
+            this.server.on("close", done);
+            this.server.close();
+        },
+
+        "// should retrieve cached resource": function (done) {
+            this.br.createResourceSet({
+                contextPath: "/a",
+                resources: {
+                    "/foo.js": {
+                        content: "Hello from foo",
+                        etag: "1234"
+                    }
+                }
+            });
+
+            this.br.createResourceSet({
+                contextPath: "/b",
+                resources: {
+                    "/foo.js": {
+                        etag: "1234"
+                    }
+                }
+            });
+
+            h.request({path: "/b/foo.js", method: "GET"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+                done();
+            }).end();
         }
     }
 });
