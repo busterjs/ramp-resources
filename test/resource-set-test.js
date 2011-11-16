@@ -358,6 +358,20 @@ buster.testCase("resource-set", {
             }).end();
         },
 
+        "// should provide request to content handler": function (done) {
+            this.rs.addResource("/test", {
+                content: function (promise, req) {
+                    assert.defined(req);
+                    assert.match(req.headers, {"x-foo": "bar"});
+                    promise.resolve("test");
+                    done();
+                }
+            });
+
+            h.request({headers: {"x-foo": "bar"}, path: this.rs.contextPath + "/test"}, function (res, body) {
+            }).end();
+        },
+
         "on combined resources": {
             setUp: function () {
                 this.rs.addResource("/bundle.js", {
