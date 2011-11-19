@@ -196,50 +196,6 @@ buster.testCase("Buster resources", {
                 assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
                 done();
             });
-        },
-
-        "test periodically resetting cached resources": function () {
-            this.br.cacheInvalidationTimeout = 3600000;
-            this.br.cacheInvalidationAge = 1800000;
-
-            var clock = this.useFakeTimers();
-            this.br.startCacheInvalidationTimeout();
-
-            var rs = this.br.createResourceSet({
-                resources: {
-                    "/test.js": {
-                        content: "Yep yep",
-                        etag: "123abc"
-                    }
-                }
-            });
-            this.br.removeResourceSet(rs);
-
-            clock.tick(1800000);
-
-            var rs = this.br.createResourceSet({
-                resources: {
-                    "/test.js": {
-                        content: "Good stuff",
-                        etag: "321cba"
-                    }
-                }
-            });
-            this.br.removeResourceSet(rs);
-
-            clock.tick(1800000);
-
-            var actual = this.br.getCachedResources();
-            assert.equals(actual, {"/test.js":["321cba"]});
-        },
-
-        "test cache invalidation timeout reschedules": function () {
-            var clock = this.useFakeTimers();
-            this.spy(this.br, "startCacheInvalidationTimeout");
-            this.br.startCacheInvalidationTimeout();
-            clock.tick(3600000 * 4);
-
-            buster.assert.equals(this.br.startCacheInvalidationTimeout.callCount, 5);
         }
     },
 
