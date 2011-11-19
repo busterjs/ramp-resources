@@ -358,18 +358,30 @@ buster.testCase("resource-set", {
             }).end();
         },
 
-        "// should provide request to content handler": function (done) {
+        "should provide request to content handler": function (done) {
             this.rs.addResource("/test", {
                 content: function (promise, req) {
+                    promise.resolve("test");
                     assert.defined(req);
                     assert.match(req.headers, {"x-foo": "bar"});
-                    promise.resolve("test");
                     done();
                 }
             });
 
             h.request({headers: {"x-foo": "bar"}, path: this.rs.contextPath + "/test"}, function (res, body) {
             }).end();
+        },
+
+        "should not provide request to content handler when getting via none-http": function (done) {
+            this.rs.addResource("/test", {
+                content: function (promise, req) {
+                    promise.resolve("test");
+                    assert.isNull(req);
+                    done();
+                }
+            });
+
+            this.rs.getResource("/test", function(){});
         },
 
         "on combined resources": {
