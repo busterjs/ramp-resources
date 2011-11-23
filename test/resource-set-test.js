@@ -90,6 +90,17 @@ buster.testCase("resource-set", {
         rs.addResource("/", {content: "hullo"});
 
         rs.getResource("/", function (err, resource) {
+            assert.equals(resource.content, "hullo");
+            done();
+        });
+    },
+
+    "test adding new root resource post create and set up script loading": function (done) {
+        var rs = this.br.createResourceSet(basicResourceSet);
+        rs.addResource("/", {content: "hullo"});
+        rs.addScriptLoadingToRootResource();
+
+        rs.getResource("/", function (err, resource) {
             assertBodyIsRootResourceProcessed(resource.content, rs);
             done();
         });
@@ -134,10 +145,26 @@ buster.testCase("resource-set", {
         });
     },
 
-    "test provides default root resource": function (done) {
+    "test setting up root resource": function (done) {
         var rs = this.br.createResourceSet({});
+        rs.createDefaultRootResourceIfNotExists();
         rs.getResource("/", function (err, resource) {
             assert.equals(resource.headers["Content-Type"], "text/html");
+            assert.equals(resource.content, rs.DEFAULT_ROOT_RESOURCE);
+            done();
+        });
+    },
+
+    "test setting up root resource with one already present": function (done) {
+        var rs = this.br.createResourceSet({
+            resources: {
+                "/": {content: "hullo"}
+            }
+        });
+        rs.createDefaultRootResourceIfNotExists();
+        rs.getResource("/", function (err, resource) {
+            assert.equals(resource.headers["Content-Type"], "text/html");
+            assert.equals(resource.content, "hullo");
             done();
         });
     },
@@ -147,14 +174,6 @@ buster.testCase("resource-set", {
         rs.getResource("/does/not/exist.js", function (err, resource) {
             assert.equals(err, busterResourcesResourceSet.RESOURCE_NOT_FOUND);
             refute.defined(resource);
-            done();
-        });
-    },
-
-    "test inserts scripts into root resource": function (done) {
-        var rs = this.br.createResourceSet(basicResourceSet);
-        rs.getResource("/", function (err, resource) {
-            assertBodyIsRootResourceProcessed(resource.content, rs);
             done();
         });
     },
@@ -602,6 +621,8 @@ buster.testCase("resource-set", {
 
     "test all entries in 'load' are script injected to root resource": function (done) {
         var r = this.br.createResourceSet({resources:{}});
+        r.createDefaultRootResourceIfNotExists();
+        r.addScriptLoadingToRootResource();
 
         // NOTE: altering 'load' directly is not a supported API.
         r.load = ["/foo", "/bar", "/baz"];
@@ -643,6 +664,7 @@ buster.testCase("resource-set", {
                 }
             }
         });
+        r.addScriptLoadingToRootResource();
 
         r.getResource("/", function (err, resource) {
             assert.equals(resource.content,
@@ -926,9 +948,7 @@ buster.testCase("resource-set", {
                     }
                 });
 
-                assert("/" in ro.resources);
-                assert(Object.keys(ro.resources).length, 3);
-
+                assert(Object.keys(ro.resources).length, 2);
                 done();
             });
         },
