@@ -721,7 +721,7 @@ buster.testCase("resource-set", {
 
     "test getResource fails for none existing resource": function () {
         var rs = resourceSet.create({});
-        assert.isFalse(rs.getResource("/foo.txt", function(){}));
+        refute(rs.getResource("/foo.txt", function(){}));
     },
 
     "test deleting resource": function () {
@@ -811,7 +811,7 @@ buster.testCase("resource-set", {
                 done();
             });
         });
-        
+
     },
 
     "test getting combined resource via context path": function (done) {
@@ -839,7 +839,7 @@ buster.testCase("resource-set", {
                 assert.equals(resource.content, "a\nb\n");
                 done();
             });
-        });        
+        });
     },
 
     "validations": {
@@ -1040,7 +1040,7 @@ buster.testCase("resource-set", {
                 assert(resource.base64Encoded);
 
                 done();
-            });         
+            });
         }
     }
 });
