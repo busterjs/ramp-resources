@@ -21,8 +21,7 @@
     "dependencies": {
         "buster-promise": "~0.4",
         "mime": "~1",
-        "uglify-js": "~1",
-        "base64": "~>2"
+        "uglify-js": "~1"
     },
     "devDependencies": {
         "buster": "*"

@@ -6,7 +6,6 @@ var busterResources = require("./../lib/buster-resources");
 var busterResourcesResource = require("./../lib/resource");
 var busterResourcesResourceSet = require("./../lib/resource-set");
 var resourceSet = require("./../lib/resource-set");
-var base64 = require("base64");
 var http = require("http");
 var h = require("./test-helper");
 
@@ -773,12 +772,10 @@ buster.testCase("resource-set", {
     },
 
     "test creating with base64 encoded data": function (done) {
-        var aBuffer = new Buffer([92, 52, 39, 11, 79]);
-
         var rs = this.br.createResourceSet({
             resources: {
                 "/foo":{
-                    content: base64.encode(aBuffer),
+                    content: "SGVsbG8gV29ybGQ=",
                     base64Encoded: true
                 },
             }
@@ -786,7 +783,7 @@ buster.testCase("resource-set", {
 
         rs.getResource("/foo", function (err, resource) {
             refute.defined(err);
-            assert.equals(aBuffer, resource.content);
+            assert.equals("Hello World", resource.content);
             done();
         });
     },
@@ -1036,7 +1033,7 @@ buster.testCase("resource-set", {
             r.getReadOnly(function (err, ro) {
                 refute.defined(err);
                 var resource = ro.resources["/foo"];
-                assert.equals(resource.content, base64.encode(aBuffer));
+                assert.equals(resource.content, aBuffer.toString("base64"));
                 assert(resource.base64Encoded);
 
                 done();
