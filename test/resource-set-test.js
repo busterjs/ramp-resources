@@ -289,6 +289,13 @@ buster.testCase("resource-set", {
                 assert.equals(resource.content, "var a=10");
                 done();
             });
+        },
+
+        "//combines resources with glob pattern": function (done) {
+            // TODO: Use minimatch to resolve pattern against internal resources
+            this.rs.addResource("/everything.js", {
+                combine: ["/**/*.js"]
+            });
         }
     },
 
