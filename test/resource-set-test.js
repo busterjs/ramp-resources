@@ -207,6 +207,21 @@ buster.testCase("resource-set", {
         });
     },
 
+    "paths": {
+        "should begin with /": function (done) {
+            var rs = this.br.createResourceSet({});
+
+            rs.addResource("test", {
+                content: "Ok"
+            });
+
+            rs.getResource("/test", function (err, resource) {
+                assert.equals("Ok", resource.content);
+                done();
+            });
+        }
+    },
+
     "mime types": {
         setUp: function () {
             this.rs = this.br.createResourceSet(basicResourceSet);
