@@ -752,50 +752,46 @@ buster.testCase("Resource set", {
         "by path": function (done) {
             var rs = resourceSet.create({});
 
-            rs.addFile(__filename).then(function (resource) {
-                assert(busterResourcesResource.isPrototypeOf(resource));
+            var resource = rs.addFile(__filename)
+            assert(busterResourcesResource.isPrototypeOf(resource));
 
-                rs.getResource(__filename, function (err, resource) {
-                    assert.equals(resource.content.toString("utf8"),
-                                  fs.readFileSync(__filename).toString("utf8"));
-                    done();
-                });
+            rs.getResource(__filename, function (err, resource) {
+                assert.equals(resource.content.toString("utf8"),
+                              fs.readFileSync(__filename).toString("utf8"));
+                done();
             });
         },
 
         "by path with missing file": function (done) {
             var filename = "/tmp/no-exist" + new Date().getTime().toString();
             var rs = resourceSet.create({});
-            rs.addFile(filename).then(function () {}, function (err) {
-                rs.getResource(filename, function (err, resource) {
-                    refute.defined(resource);
-                    done();
-                });
+            var resource = rs.addFile(filename);
+            rs.getResource(filename, function (err, resource) {
+                refute.defined(resource);
+                done();
             });
         },
 
         "by path with custom resource path": function (done) {
             var rs = resourceSet.create({});
-            rs.addFile(__filename, {path: "/custom.txt"}).then(function (resource) {
-                rs.getResource("/custom.txt", function (err, resource) {
-                    assert.equals(resource.content.toString("utf8"),
-                                  fs.readFileSync(__filename).toString("utf8"));
-                    done();
-                });
+            var resource = rs.addFile(__filename, {path: "/custom.txt"});
+            rs.getResource("/custom.txt", function (err, resource) {
+                assert.equals(resource.content.toString("utf8"),
+                              fs.readFileSync(__filename).toString("utf8"));
+                done();
             });
         },
 
         "by path with options": function (done) {
             var rs = resourceSet.create({});
-            rs.addFile(__filename, {headers: {"X-Foo": "Bar"}}).then(function (res) {
-                assert.match(res.headers, {"X-Foo": "Bar"});
-                done();
-            });
+            var resource = rs.addFile(__filename, {headers: {"X-Foo": "Bar"}})
+            assert.match(resource.headers, {"X-Foo": "Bar"});
+            done();
         },
 
         "sets etag": function (done) {
             var rs = resourceSet.create({});
-            rs.addFile(__filename).then(function (resource) {
+            rs.addFileWithEtag(__filename).then(function (resource) {
                 assert.defined(resource.etag);
                 assert.match(resource.etag, /^[0-9a-f]{40}$/);
                 done();
@@ -804,7 +800,7 @@ buster.testCase("Resource set", {
 
         "does not override provided etag": function (done) {
             var rs = resourceSet.create({});
-            rs.addFile(__filename, { etag: "YEAH" }).then(function (resource) {
+            rs.addFileWithEtag(__filename, { etag: "YEAH" }).then(function (resource) {
                 assert.equals(resource.etag, "YEAH");
                 done();
             });
