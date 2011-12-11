@@ -22,7 +22,7 @@ var basicResourceSet = {
     }
 };
 
-buster.testCase("resource-set", {
+buster.testCase("Resource set", {
     setUp: function () {
         this.br = Object.create(busterResources);
     },
