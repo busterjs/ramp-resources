@@ -376,26 +376,41 @@ buster.testCase("resource-set", {
             }).end();
         },
 
-        "should error for resource erroring resource": function (done) {
-            this.rs.addFile("/tmp/does-not-exist");
-            h.request({path: this.rs.contextPath + "/tmp/does-not-exist"}, function (res, body) {
-                assert.equals(500, res.statusCode);
-                var parsed = JSON.parse(body);
-                assert.equals(parsed.code, "ENOENT");
-                done();
-            }).end();
-        },
+        "for erroring resource": {
+            setUp: function () {
+                this.rs.addResource("/tmp/does-not-exist", {
+                    content: function (promise) {
+                        fs.readFile("/tmp/does-not-exist", function (err, data) {
+                            if (err) return promise.reject(err);
+                            promise.resolve(data);
+                        });
+                    }
+                });
+            },
 
-        "should error for failing combined resource": function (done) {
-            this.rs.addFile("/tmp/does-not-exist");
-            this.rs.addResource("/test", {combine: ["/foo.js", "/tmp/does-not-exist"]});
+            "should error": function (done) {
+                h.request({
+                    path: this.rs.contextPath + "/tmp/does-not-exist"
+                }, function (res, body) {
+                    assert.equals(500, res.statusCode);
+                    var parsed = JSON.parse(body);
+                    assert.equals(parsed.code, "ENOENT");
+                    done();
+                }).end();
+            },
 
-            h.request({path: this.rs.contextPath + "/test"}, function (res, body) {
-                assert.equals(500, res.statusCode);
-                var parsed = JSON.parse(body);
-                assert.equals(parsed.code, "ENOENT");
-                done();
-            }).end();
+            "should error when combining": function (done) {
+                this.rs.addResource("/test", {
+                    combine: ["/foo.js", "/tmp/does-not-exist"]
+                });
+
+                h.request({path: this.rs.contextPath + "/test"}, function (res, body) {
+                    assert.equals(500, res.statusCode);
+                    var parsed = JSON.parse(body);
+                    assert.equals(parsed.code, "ENOENT");
+                    done();
+                }).end();
+            }
         },
 
         "should provide request to content handler": function (done) {
@@ -696,49 +711,60 @@ buster.testCase("resource-set", {
         });
     },
 
-    "test adding file by path": function (done) {
-        var rs = resourceSet.create({});
-        var r = rs.addFile(__filename);
-        assert(busterResourcesResource.isPrototypeOf(r));
+    "adding files": {
+        "by path": function (done) {
+            var rs = resourceSet.create({});
 
-        rs.getResource(__filename, function (err, resource) {
-            assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
-            done();
-        });
+            rs.addFile(__filename).then(function (resource) {
+                assert(busterResourcesResource.isPrototypeOf(resource));
+
+                rs.getResource(__filename, function (err, resource) {
+                    assert.equals(resource.content.toString("utf8"),
+                                  fs.readFileSync(__filename).toString("utf8"));
+                    done();
+                });
+            });
+        },
+
+        "by path with missing file": function (done) {
+            var filename = "/tmp/no-exist" + new Date().getTime().toString();
+            var rs = resourceSet.create({});
+            rs.addFile(filename).then(function () {}, function (err) {
+                rs.getResource(filename, function (err, resource) {
+                    refute.defined(resource);
+                    done();
+                });
+            });
+        },
+
+        "by path with custom resource path": function (done) {
+            var rs = resourceSet.create({});
+            rs.addFile(__filename, {path: "/custom.txt"}).then(function (resource) {
+                rs.getResource("/custom.txt", function (err, resource) {
+                    assert.equals(resource.content.toString("utf8"),
+                                  fs.readFileSync(__filename).toString("utf8"));
+                    done();
+                });
+            });
+        },
+
+        "by path with options": function (done) {
+            var rs = resourceSet.create({});
+            rs.addFile(__filename, {headers: {"X-Foo": "Bar"}}).then(function (res) {
+                assert.match(res.headers, {"X-Foo": "Bar"});
+                done();
+            });
+        },
+
+        "sets etag": function (done) {
+            var rs = resourceSet.create({});
+            rs.addFile(__filename).then(function (resource) {
+                assert.defined(resource.etag);
+                assert.match(resource.etag, /^[0-9a-f]{40}$/);
+                done();
+            });
+        }
     },
-
-    "test adding file by path with missing file": function (done) {
-        var filename = "/tmp/i-sure-hope-this-file-does-not-exist" + new Date().getTime().toString();
-        var rs = resourceSet.create({});
-        rs.addFile(filename);
-
-        rs.getResource(filename, function (err, resource) {
-            refute.defined(resource);
-            assert.equals(err.code, "ENOENT");
-            done();
-        });
-    },
-
-    "test adding file by path with custom resource path": function (done) {
-        var rs = resourceSet.create({});
-        rs.addFile(__filename, {path: "/custom.txt"});
-
-        rs.getResource("/custom.txt", function (err, resource) {
-            assert.equals(resource.content.toString("utf8"), fs.readFileSync(__filename).toString("utf8"));
-            done();
-        });
-    },
-
-    "test adding file by path with options": function (done) {
-        var rs = resourceSet.create({});
-        rs.addFile(__filename, {headers: {"X-Foo": "Bar"}});
-
-        rs.getResource(__filename, function (err, resource) {
-            assert.match(resource.headers, {"X-Foo": "Bar"});
-            done();
-        });
-    },
-
 
     "test getResource fails for none existing resource": function () {
         var rs = resourceSet.create({});
