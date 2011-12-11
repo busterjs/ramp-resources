@@ -763,6 +763,14 @@ buster.testCase("resource-set", {
                 assert.match(resource.etag, /^[0-9a-f]{40}$/);
                 done();
             });
+        },
+
+        "does not override provided etag": function (done) {
+            var rs = resourceSet.create({});
+            rs.addFile(__filename, { etag: "YEAH" }).then(function (resource) {
+                assert.equals(resource.etag, "YEAH");
+                done();
+            });
         }
     },
 
