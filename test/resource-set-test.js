@@ -289,12 +289,49 @@ buster.testCase("Resource set", {
                 assert.equals(resource.content, "var a=10");
                 done();
             });
+        }
+    },
+
+    "combines": {
+        setUp: function () {
+            this.rs = this.br.createResourceSet(basicResourceSet);
+
+            this.rs.addResource("/foo.js", {
+                content: "foo"
+            });
+            this.rs.addResource("/bar.js", {
+                content: "bar"
+            });
+            this.rs.addResource("/baz/baz.js", {
+                content: "baz"
+            });
         },
 
-        "//combines resources with glob pattern": function (done) {
-            // TODO: Use minimatch to resolve pattern against internal resources
+        "resources with glob pattern": function (done) {
             this.rs.addResource("/everything.js", {
-                combine: ["/**/*.js"]
+                combine: ["*.js"]
+            });
+
+            this.rs.getResource(this.rs.contextPath + "/everything.js", function (err, resource) {
+                refute.defined(err);
+                assert.match(resource.content, "foo");
+                assert.match(resource.content, "bar");
+                refute.match(resource.content, "baz");
+                done();
+            });
+        },
+
+        "resources with recursive glob pattern": function (done) {
+            this.rs.addResource("/everything.js", {
+                combine: ["**.js"]
+            });
+
+            this.rs.getResource(this.rs.contextPath + "/everything.js", function (err, resource) {
+                refute.defined(err);
+                assert.match(resource.content, "foo");
+                assert.match(resource.content, "bar");
+                assert.match(resource.content, "baz");
+                done();
             });
         }
     },
