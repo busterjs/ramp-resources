@@ -61,12 +61,9 @@ buster.testCase("Buster resources", {
                 etag: "123abc"
             });
 
-            var rs2 = this.br.createResourceSet({
-                contextPath: "/rs2",
-                resources: {
-                    "/test.js": {etag: "123abc"}
-                }
-            });
+            var rs2 = this.br.createResourceSet();
+            rs2.contextPath = "/rs2";
+            rs2.addResource("/test.js", {etag: "123abc"});
 
             this.br.getResource("/rs2/test.js", function (err, resource) {
                 assert.equals(resource.content, "Hello, World!");
@@ -77,13 +74,9 @@ buster.testCase("Buster resources", {
 
         "test creating new resource with none existing etag": function (done) {
             var self = this;
+            var rs = this.br.createResourceSet();
             try {
-                self.br.createResourceSet({
-                    contextPath: "/rs2",
-                    resources: {
-                        "/test.js": {etag: "123abc"}
-                    }
-                });
+                rs.addResource("/test.js", {etag: "123abc"});
             } catch (e) {
                 buster.assert.match(e.message, "/test.js");
                 buster.assert.match(e.message, "123abc");
