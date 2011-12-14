@@ -85,6 +85,22 @@ buster.testCase("Buster resources", {
             }
         },
 
+        "test creating new resource immediately with none existing etag": function (done) {
+            var self = this;
+            try {
+                self.br.createResourceSet({
+                    resources: {
+                        "/test.js": {etag: "123abc"}
+                    }
+                });
+            } catch (e) {
+                buster.assert.match(e.message, "/test.js");
+                buster.assert.match(e.message, "123abc");
+                buster.assert.match(e.message, "not found");
+                done();
+            }
+        },
+
         "test removing resource sets": function (done) {
             var self = this;
             var rs = this.br.createResourceSet({
