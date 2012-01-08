@@ -1,7 +1,4 @@
-var config = module.exports;
-
-config["Tests"] = {
+module.exports["Resource tests"] = {
     environment: "node",
-    libs: ["lib/**/*.js"],
-    tests: ["test/**/*-test.js"]
-}
+    tests: ["test/**-test.js"]
+};

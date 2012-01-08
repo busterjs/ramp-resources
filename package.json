@@ -1,6 +1,6 @@
 {
     "name": "buster-resources",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "description": "",
     "homepage": "http://busterjs.org/buster-resources",
     "author": { "name": "August Lilleaas and Christian Johansen" },
@@ -19,10 +19,9 @@
         "url": "git://gitorious.org/buster/buster-resources.git"
     },
     "dependencies": {
-        "buster-promise": "~0.4",
+        "buster-core": ">= 0.5",
         "mime": "~1",
-        "uglify-js": "~1",
-        "minimatch": "~0.0.4"
+        "buster-glob": "~0.1"
     },
     "devDependencies": {
         "buster": "*"
