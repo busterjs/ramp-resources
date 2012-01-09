@@ -291,7 +291,117 @@ buster.testCase("Resource sets", {
             this.rs.serialize().then(done(function (serialized) {
                 assert.isObject(serialized);
             }));
+        },
+
+        "serializes content resource": function (done) {
+            var add = this.rs.addResource({
+                path: "/buster.js",
+                content: "var a = 42;"
+            });
+
+            add.then(function () {
+                this.rs.serialize().then(done(function (serialized) {
+                    assert.equals(serialized, {
+                        resources: [{
+                            encoding: "utf-8",
+                            path: "/buster.js",
+                            content: "var a = 42;"
+                        }]
+                    });
+                }));
+            }.bind(this));
+        },
+
+        "serializes resource meta data": function (done) {
+            var add = this.rs.addResource({
+                path: "/buster.js",
+                content: "var a = 42;",
+                etag: "1234abcd",
+                headers: { "X-Buster": "Aww yeah" }
+            });
+
+            add.then(function () {
+                this.rs.serialize().then(done(function (serialized) {
+                    assert.equals(serialized, {
+                        resources: [{
+                            encoding: "utf-8",
+                            path: "/buster.js",
+                            content: "var a = 42;",
+                            etag: "1234abcd",
+                            headers: { "X-Buster": "Aww yeah" }
+                        }]
+                    });
+                }));
+            }.bind(this));
+        },
+
+        "serializes backend resource": function (done) {
+            var add = this.rs.addResource({
+                path: "/app",
+                backend: "http://localhost:3000/app"
+            });
+
+            add.then(function () {
+                this.rs.serialize().then(done(function (serialized) {
+                    assert.equals(serialized, {
+                        resources: [{
+                            path: "/app",
+                            backend: "http://localhost:3000/app"
+                        }]
+                    });
+                }));
+            }.bind(this));
+        },
+
+        "waits for pending added resource": function (done) {
+            this.rs.addResource("foo.js");
+            this.rs.serialize().then(done(function (serialized) {
+                assert.match(serialized, {
+                    resources: [{
+                        path: "/foo.js",
+                        content: "var thisIsTheFoo = 5;"
+                    }]
+                });
+            }));
+        },
+
+        "combine resource strips out content": function (done) {
+            this.rs.addResource({ path: "/buster.js", content: "// Buster" });
+            this.rs.addResource({ path: "/sinon.js", content: "// Sinon" });
+            this.rs.addResource({
+                path: "/bundle.js",
+                combine: ["/buster.js", "/sinon.js"]
+            });
+
+            this.rs.serialize().then(done(function (serialized) {
+                assert.equals(serialized.resources[2], {
+                    encoding: "utf-8",
+                    path: "/bundle.js",
+                    combine: ["/buster.js", "/sinon.js"]
+                });
+            }));
+        },
+
+        "file resources": function (done) {
+            this.rs.addResources(["foo.js", "bar.js"]);
+
+            this.rs.serialize().then(done(function (serialized) {
+                assert.match(serialized.resources, [{
+                    path: "/foo.js",
+                    encoding: "utf-8",
+                    content: "var thisIsTheFoo = 5;",
+                    etag: /^[a-z0-9]+$/
+                }, {
+                    path: "/bar.js",
+                    encoding: "utf-8",
+                    content: "var helloFromBar = 1;",
+                    etag: /^[a-z0-9]+$/
+                }]);
+            }));
         }
+    },
+
+    "appendLoad": {
     }
 /*
 
