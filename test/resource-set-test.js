@@ -454,6 +454,72 @@ buster.testCase("Resource sets", {
         }
     },
 
+    "concat": {
+        "creates new resource set": function () {
+            var rs1 = resourceSet.create();
+            var rs2 = resourceSet.create();
+
+            var rs3 = rs1.concat(rs2);
+
+            refute.same(rs1, rs3);
+            refute.same(rs2, rs3);
+        },
+
+        "adds resources from all sources": function (done) {
+            var rs1 = resourceSet.create();
+            var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
+            var rs2 = resourceSet.create();
+            var add2 = rs2.addResource({ path: "/sinon.js", content: "Nok" });
+            var rs3 = resourceSet.create();
+            var add3 = rs2.addResource({ path: "/when.js", content: "when()" });
+
+            when.all([add1, add2, add3]).then(done(function () {
+                var rs4 = rs1.concat(rs2, rs3);
+                var cb = buster.countdown(3, done);
+
+                assert.content(rs4.get("/buster.js"), "Ok", cb);
+                assert.content(rs4.get("/sinon.js"), "Nok", cb);
+                assert.content(rs4.get("/when.js"), "when()", cb);
+            }));
+        },
+
+        "resources overwrite from right to left": function (done) {
+            var rs1 = resourceSet.create();
+            var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
+            var rs2 = resourceSet.create();
+            var add2 = rs2.addResource({ path: "/buster.js", content: "Nok" });
+
+            when.all([add1, add2]).then(done(function () {
+                var rs3 = rs1.concat(rs2);
+                assert.content(rs3.get("/buster.js"), "Nok", done);
+            }));
+        },
+
+        "appends load in order": function (done) {
+            var rs1 = resourceSet.create();
+            var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
+            var rs2 = resourceSet.create();
+            var add2 = rs2.addResource({ path: "/sinon.js", content: "Nok" });
+
+            when.all([add1, add2]).then(done(function () {
+                rs1.loadPath.append("/buster.js");
+                rs2.loadPath.append("/sinon.js");
+                var rs3 = rs1.concat(rs2);
+                var paths = rs3.loadPath.paths();
+                assert.equals(rs3.loadPath.paths(), ["/buster.js", "/sinon.js"]);
+            }));
+        },
+
+        "uses rootpath of target resource set": function () {
+            var rs1 = resourceSet.create("/tmp");
+            var rs2 = resourceSet.create("/var");
+
+            var rs3 = rs1.concat(rs2);
+
+            assert.equals(rs3.rootPath, "/tmp");
+        }
+    },
+
     "appendLoad": {
     }
 /*
