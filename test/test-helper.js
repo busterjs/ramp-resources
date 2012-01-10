@@ -1,5 +1,6 @@
 var B = require("buster");
 var resource = require("../lib/resource");
+var when = require("when");
 
 function verifyResourceError(message, e) {
     if (!e.name == "InvalidResource") {
@@ -43,4 +44,21 @@ B.assertions.add("content", {
         }));
         return true;
     }
+});
+
+B.assertions.add("resourceEqual", {
+    assert: function (res1, res2, done) {
+        var equal = res1.path == res2.path &&
+            res1.etag == res2.etag &&
+            res1.encoding == res2.encoding &&
+            B.assertions.deepEqual(res1.headers(), res2.headers());
+        if (!equal) { return false; }
+
+        when.all([res1.content(), res2.content()]).then(function (contents) {
+            assert.equals(contents[0], contents[1]);
+            done();
+        });
+        return true;
+    },
+    assertMessage: "Expected resources ${0} and ${1} to be the same"
 });

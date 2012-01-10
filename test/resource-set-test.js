@@ -401,6 +401,59 @@ buster.testCase("Resource sets", {
         }
     },
 
+    "deserialize": {
+        "resolves as resource set with single resource": function (done) {
+            resourceSet.deserialize({ resources: [{
+                path: "/buster.js",
+                content: "Hey mister"
+            }] }).then(function (rs) {
+                assert.defined(rs.get("/buster.js"));
+                assert.content(rs.get("/buster.js"), "Hey mister", done);
+            });
+        },
+
+        "returns resource set with two resources": function (done) {
+            resourceSet.deserialize({ resources: [{
+                path: "/buster.js",
+                content: "Hey mister"
+            }, {
+                path: "/buster2.js",
+                content: "Yo mister"
+            }] }).then(done(function (rs) {
+                assert.equals(rs.length, 2);
+                assert.defined(rs.get("/buster.js"));
+                assert.defined(rs.get("/buster2.js"));
+            }));
+        },
+
+        "returns resource set with load path": function (done) {
+            resourceSet.deserialize({ load: ["/buster.js"],
+                                               resources: [{
+                path: "/buster.js",
+                content: "Hey mister"
+            }, {
+                path: "/buster2.js",
+                content: "Yo mister"
+            }] }).then(done(function (rs) {
+                assert.equals(rs.loadPath.paths(), ["/buster.js"]);
+            }));
+        },
+
+        "deserializes serialized resource set": function (done) {
+            var rs = resourceSet.create(FIXTURE_DIR);
+            rs.addResources(["foo.js", "bar.js"]);
+            var cb = buster.countdown(2, done);
+            rs.serialize().then(function (serialized) {
+                resourceSet.deserialize(serialized).then(function (rs2) {
+                    assert.equals(rs.length, rs2.length);
+                    assert.equals(rs.loadPath.paths, rs.loadPath.paths);
+                    assert.resourceEqual(rs.get("/foo.js"), rs2.get("/foo.js"), cb);
+                    assert.resourceEqual(rs.get("/bar.js"), rs2.get("/bar.js"), cb);
+                });
+            });
+        }
+    },
+
     "appendLoad": {
     }
 /*
