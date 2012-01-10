@@ -36,6 +36,16 @@ buster.testCase("Load path", {
             this.rs.loadPath.append("/bar.js");
 
             assert.equals(this.rs.loadPath.paths(), ["/foo.js", "/bar.js"]);
+        },
+
+        "skips existing paths": function () {
+            this.rs.addResource({ path: "/foo.js", content: "Ok" });
+            this.rs.addResource({ path: "/bar.js", content: "Ok" });
+            this.rs.addResource({ path: "/baz.js", content: "Ok" });
+            this.rs.loadPath.append("/foo.js");
+            this.rs.loadPath.append(["/bar.js", "/foo.js"]);
+
+            assert.equals(this.rs.loadPath.paths(), ["/foo.js", "/bar.js"]);
         }
     },
 
@@ -66,6 +76,16 @@ buster.testCase("Load path", {
             this.rs.addResource({ path: "/bar.js", content: "Ok" });
             this.rs.loadPath.prepend("/foo.js");
             this.rs.loadPath.prepend("/bar.js");
+
+            assert.equals(this.rs.loadPath.paths(), ["/bar.js", "/foo.js"]);
+        },
+
+        "skips existing paths": function () {
+            this.rs.addResource({ path: "/foo.js", content: "Ok" });
+            this.rs.addResource({ path: "/bar.js", content: "Ok" });
+            this.rs.addResource({ path: "/baz.js", content: "Ok" });
+            this.rs.loadPath.prepend("/foo.js");
+            this.rs.loadPath.prepend(["/bar.js", "/foo.js"]);
 
             assert.equals(this.rs.loadPath.paths(), ["/bar.js", "/foo.js"]);
         }
