@@ -75,7 +75,10 @@ buster.testCase("Resources", {
         },
 
         "includes etag when set": function () {
-            var rs = resource.create("/path", { etag: "1234abc", content: "Hey" });
+            var rs = resource.create("/path", {
+                etag: "1234abc",
+                content: "Hey"
+            });
 
             assert.equals(rs.header("ETag"), "1234abc");
         },
@@ -91,7 +94,8 @@ buster.testCase("Resources", {
         "defaults to text/html and utf-8": function () {
             var rs = resource.create("/path", { content: "<!DOCTYPE html>" });
 
-            assert.equals(rs.header("Content-Type"), "text/html; charset=utf-8");
+            assert.equals(rs.header("Content-Type"),
+                          "text/html; charset=utf-8");
         },
 
         "defaults to text/html and set charset": function () {
@@ -100,7 +104,8 @@ buster.testCase("Resources", {
                 content: "<!DOCTYPE html>"
             });
 
-            assert.equals(rs.header("Content-Type"), "text/html; charset=iso-8859-1");
+            assert.equals(rs.header("Content-Type"),
+                          "text/html; charset=iso-8859-1");
         },
 
         "defaults to text/css for CSS files": function () {
@@ -108,7 +113,8 @@ buster.testCase("Resources", {
                 content: "body {}"
             });
 
-            assert.equals(rs.header("Content-Type"), "text/css; charset=utf-8");
+            assert.equals(rs.header("Content-Type"),
+                          "text/css; charset=utf-8");
         },
 
         "defaults to application/javascript for JS files": function () {
@@ -139,7 +145,9 @@ buster.testCase("Resources", {
 
     "with string content": {
         "serves string as content": function (done) {
-            var rs = resource.create("/path.js", { content: "console.log(42);" });
+            var rs = resource.create("/path.js", {
+                content: "console.log(42);"
+            });
 
             assert.content(rs, "console.log(42);", done);
         }
@@ -147,8 +155,9 @@ buster.testCase("Resources", {
 
     "with buffer content": {
         "assumes utf-8 encoded string": function (done) {
+            var bytes = [231, 167, 129, 227, 129, 175, 227, 130, 172];
             var rs = resource.create("/path.txt", {
-                content: new Buffer([231, 167, 129, 227, 129, 175, 227, 130, 172])
+                content: new Buffer(bytes)
             });
 
             assert.content(rs, "私はガ", done);
@@ -176,35 +185,35 @@ buster.testCase("Resources", {
             });
 
             assert.content(rs, "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYA" +
-                           "AABWKLW/AAAAAXNSR0IArs4c6QAAAAZiS0dEAGgAVwBWu/pLBw" +
-                           "AAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wBBRYICH0/" +
-                           "co4AAAAIdEVYdENvbW1lbnQA9syWvwAAABRJREFUCNdjYGBg+M" +
-                           "8AATAak/EfAFnNBPwrgq/rAAAAAElFTkSuQmCC", done);
+                           "AABWKLW/AAAAAXNSR0IArs4c6QAAAAZiS0dEAGgAVwBWu/pLB" +
+                           "wAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wBBRYICH" +
+                           "0/co4AAAAIdEVYdENvbW1lbnQA9syWvwAAABRJREFUCNdjYGB" +
+                           "g+M8AATAak/EfAFnNBPwrgq/rAAAAAElFTkSuQmCC", done);
         }
     },
 
     "respondsTo": {
-        "is true when path matches resource path": function () {
+        "true when path matches resource path": function () {
             var rs = resource.create("/file.js", { content: "Yo" });
             assert(rs.respondsTo("/file.js"));
         },
 
-        "is true when path sans trailing slash matches resource path": function () {
+        "true when path sans trailing slash == resource path": function () {
             var rs = resource.create("/file", { content: "Yo" });
             assert(rs.respondsTo("/file/"));
         },
 
-        "is true when path matches resource path sans trailing slash": function () {
+        "true when path == resource path sans trailing slash": function () {
             var rs = resource.create("/file/", { content: "Yo" });
             assert(rs.respondsTo("/file"));
         },
 
-        "is false for different paths": function () {
+        "false for different paths": function () {
             var rs = resource.create("/styles.css", { content: "Yo" });
             refute(rs.respondsTo("/"));
         },
 
-        "is false for partial path match": function () {
+        "false for partial path match": function () {
             var rs = resource.create("/styles", { content: "Yo" });
             refute(rs.respondsTo("/styles/page.css"));
         }
@@ -274,7 +283,7 @@ buster.testCase("Resources", {
     },
 
     "with function content": {
-        "resolves content() with content function return value": function (done) {
+        "resolves with content function return value": function (done) {
             var rs = resource.create("/api", { content: function () {
                 return "42";
             } });

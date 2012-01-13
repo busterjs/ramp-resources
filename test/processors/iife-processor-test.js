@@ -7,7 +7,7 @@ buster.testCase("Processors", {
     "iife processor": {
         setUp: function () {
             this.resource = resource.create("/buster.js", {
-                content: "var buster = {};",
+                content: "var buster = {};"
             });
         },
 
@@ -23,8 +23,9 @@ buster.testCase("Processors", {
 
             assert.content(this.resource,
                            "(function (__GLOBAL) {var buster = {};" +
-                           "__GLOBAL.buster=buster;" +
-                           "}(typeof global != \"undefined\" ? global : this));", done);
+                           "__GLOBAL.buster=buster;}" +
+                           "(typeof global != \"undefined\" ? global : this));",
+                           done);
         },
 
         "exports multiple variables by assigning to global": function (done) {
@@ -33,20 +34,22 @@ buster.testCase("Processors", {
             assert.content(this.resource,
                            "(function (__GLOBAL) {var buster = {};" +
                            "__GLOBAL.buster=buster;" +
-                           "__GLOBAL.sinon=sinon;" +
-                           "}(typeof global != \"undefined\" ? global : this));", done);
+                           "__GLOBAL.sinon=sinon;}" +
+                           "(typeof global != \"undefined\" ? global : this));",
+                           done);
         },
 
         "separates exports from contents with semicolon": function (done) {
             this.resource = resource.create("/buster.js", {
-                content: "var buster = {}",
+                content: "var buster = {}"
             });
             this.resource.addProcessor(iife(["buster"]));
 
             assert.content(this.resource,
                            "(function (__GLOBAL) {var buster = {};" +
-                           "__GLOBAL.buster=buster;" +
-                           "}(typeof global != \"undefined\" ? global : this));", done);
+                           "__GLOBAL.buster=buster;}" +
+                           "(typeof global != \"undefined\" ? global : this));",
+                           done);
         }
     }
 });

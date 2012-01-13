@@ -47,8 +47,9 @@ buster.testCase("HTTP proxy", {
 
     tearDown: function (done) {
         var cb = buster.countdown(2, done);
+        var i, l;
 
-        for (var i = 0, l = this.requests.length; i < l; ++i) {
+        for (i = 0, l = this.requests.length; i < l; ++i) {
             if (!this.requests[i].res.ended) {
                 this.requests[i].res.end();
             }
@@ -98,7 +99,7 @@ buster.testCase("HTTP proxy", {
             };
         },
 
-        "should forward headers": function (done) {
+        "forwards headers": function (done) {
             request({ headers: {
                 "Expires": "Sun, 15 Mar 2012 12:18 26 GMT",
                 "X-Buster": "Yes"
@@ -114,7 +115,7 @@ buster.testCase("HTTP proxy", {
     },
 
     "responses": {
-        "should send response": function (done) {
+        "sends response": function (done) {
             request({}, done(function () {
                 assert(true);
             })).end();
@@ -125,7 +126,7 @@ buster.testCase("HTTP proxy", {
             };
         },
 
-        "should forward response code": function (done) {
+        "forwards response code": function (done) {
             request({}, done(function (req, res) {
                 assert.equals(res.statusCode, 202);
             })).end();
@@ -136,7 +137,7 @@ buster.testCase("HTTP proxy", {
             };
         },
 
-        "should forward response body": function (done) {
+        "forwards response body": function (done) {
             request({}, function (req, res) {
                 body(res, done(function (body) {
                     assert.equals(body, "Yo, hey");
@@ -149,7 +150,7 @@ buster.testCase("HTTP proxy", {
             };
         },
 
-        "should forward headers": function (done) {
+        "forwards headers": function (done) {
             request({}, done(function (req, res) {
                 assert.match(res.headers, {
                     "expires": "Sun, 15 Mar 2012 12:18 26 GMT",
@@ -166,7 +167,7 @@ buster.testCase("HTTP proxy", {
             };
         },
 
-        "should respond with 503 when backend is down": function (done) {
+        "responds with 503 when backend is down": function (done) {
             this.proxyMiddleware = httpProxy.create("localhost", 2220);
 
             request({}, done(function (req, res) {
@@ -177,33 +178,33 @@ buster.testCase("HTTP proxy", {
 
     "backend context path": {
         setUp: function () {
-            this.proxyMiddleware = httpProxy.create("localhost", 2222, "/myapp");
+            this.proxyMiddleware = httpProxy.create("localhost", 2222, "/app");
         },
 
-        "should forward requests to scoped path": function (done) {
+        "forwards requests to scoped path": function (done) {
             request({ method: "GET", path: "/buster" }).end();
 
             this.onBackendRequest = done(function () {
-                assert.equals(this.requests[0].req.url, "/myapp/buster");
+                assert.equals(this.requests[0].req.url, "/app/buster");
             });
         },
 
-        "should avoid double slash": function (done) {
-            this.proxyMiddleware.path = "/myapp/";
+        "avoids double slash": function (done) {
+            this.proxyMiddleware.path = "/app/";
             request({ method: "GET", path: "/buster" }).end();
 
             this.onBackendRequest = done(function () {
-                assert.equals(this.requests[0].req.url, "/myapp/buster");
+                assert.equals(this.requests[0].req.url, "/app/buster");
             });
         },
 
-        "should strip context path from Location response header": function (done) {
-            request({ method: "GET", path: "/buster" }, done(function (req, res) {
+        "strips context path from Location response header": function (done) {
+            request({method: "GET", path: "/buster"}, done(function (req, res) {
                 assert.equals(res.headers.location, "/buster");
             })).end();
 
             this.onBackendRequest = function (req, res) {
-                res.writeHead(302, { "Location": "/myapp/buster" });
+                res.writeHead(302, { "Location": "/app/buster" });
                 res.end();
             };
         }
@@ -215,7 +216,7 @@ buster.testCase("HTTP proxy", {
             this.proxyMiddleware.setProxyPath("/buster");
         },
 
-        "should forward requests to stripped path": function (done) {
+        "forwards requests to stripped path": function (done) {
             request({ method: "GET", path: "/buster/" }).end();
 
             this.onBackendRequest = done(function () {
@@ -223,7 +224,7 @@ buster.testCase("HTTP proxy", {
             });
         },
 
-        "should add missing slash": function (done) {
+        "adds missing slash": function (done) {
             request({ method: "GET", path: "/buster" }).end();
 
             this.onBackendRequest = done(function () {
@@ -231,7 +232,7 @@ buster.testCase("HTTP proxy", {
             });
         },
 
-        "should avoid double slash": function (done) {
+        "avoids double slash": function (done) {
             this.proxyMiddleware.setProxyPath("/buster/");
             request({ method: "GET", path: "/buster/bundle.js" }).end();
 
@@ -240,8 +241,9 @@ buster.testCase("HTTP proxy", {
             });
         },
 
-        "should add context path to Location response header": function (done) {
-            request({ method: "GET", path: "/buster/sumptn" }, done(function (req, res) {
+        "adds context path to Location response header": function (done) {
+            var url = "/buster/sumptn";
+            request({ method: "GET", path: url }, done(function (req, res) {
                 assert.equals(res.headers.location, "/buster/other");
             })).end();
 
@@ -258,8 +260,8 @@ buster.testCase("HTTP proxy", {
             this.proxyMiddleware.setProxyPath("/bar");
         },
 
-        "should forward requests to correct path": function (done) {
-            request({ method: "GET", path: "/bar/baz" }, done(function (req, res) {
+        "forwards requests to correct path": function (done) {
+            request({method: "GET", path: "/bar/baz"}, done(function (r, res) {
                 assert.equals(res.headers.location, "/bar/foo/zing");
             })).end();
 

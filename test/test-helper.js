@@ -3,7 +3,7 @@ var resource = require("../lib/resource");
 var when = require("when");
 
 function verifyResourceError(message, e) {
-    if (!e.name == "InvalidResource") {
+    if (e.name !== "InvalidResourceError") {
         this.fail("Expected resource.create to fail with " +
                   "InvalidResourceError, but failed with " + e.name);
     }
@@ -17,7 +17,7 @@ function verifyResourceError(message, e) {
 B.assertions.add("invalidResource", {
     assert: function (path, res, message) {
         try {
-            if (typeof path == "string") {
+            if (typeof path === "string") {
                 resource.create(path, res);
                 return false;
             } else {
@@ -39,7 +39,7 @@ B.assertions.add("content", {
         resource.content().then(done(function (actual) {
             assert.same(actual, expected);
         }), done(function (err) {
-            buster.log(err.stack)
+            buster.log(err.stack);
             B.assertions.fail("content() rejected");
         }));
         return true;
@@ -48,9 +48,9 @@ B.assertions.add("content", {
 
 B.assertions.add("resourceEqual", {
     assert: function (res1, res2, done) {
-        var equal = res1.path == res2.path &&
-            res1.etag == res2.etag &&
-            res1.encoding == res2.encoding &&
+        var equal = res1.path === res2.path &&
+            res1.etag === res2.etag &&
+            res1.encoding === res2.encoding &&
             B.assertions.deepEqual(res1.headers(), res2.headers());
         if (!equal) { return false; }
 
