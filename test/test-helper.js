@@ -1,6 +1,7 @@
 var B = require("buster");
 var resource = require("../lib/resource");
 var when = require("when");
+var http = require("http");
 
 function verifyResourceError(message, e) {
     if (e.name !== "InvalidResourceError") {
@@ -62,3 +63,40 @@ B.assertions.add("resourceEqual", {
     },
     assertMessage: "Expected resources ${0} and ${1} to be the same"
 });
+
+function body(res, callback) {
+    var data = "";
+    res.on("data", function (chunk) { data += chunk; });
+    res.on("end", function () { callback(data); });
+}
+
+exports.req = function req(opt, callback) {
+    var req = http.request(buster.extend({
+        method: "GET",
+        host: "localhost",
+        port: 2233
+    }, opt), function (res) {
+        body(res, function (data) {
+            if (callback) {
+                callback(req, res, data);
+            }
+        });
+    });
+    return req;
+};
+
+exports.createServer = function createServer(middleware, done) {
+    var server = http.createServer(function (req, res) {
+        if (!middleware.respond(req, res)) {
+            res.writeHead(418);
+            res.end("Short and stout");
+        }
+    });
+    server.listen(2233, done);
+    return server;
+};
+
+exports.serverTearDown = function serverTearDown(done) {
+    this.server.on("close", done);
+    this.server.close();
+}
