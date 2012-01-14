@@ -64,20 +64,20 @@ B.assertions.add("resourceEqual", {
     assertMessage: "Expected resources ${0} and ${1} to be the same"
 });
 
-function body(res, callback) {
+exports.reqBody = function (res, callback) {
     var data = "";
     res.on("data", function (chunk) { data += chunk; });
     res.on("end", function () { callback(data); });
-}
+};
 
 exports.req = function (opt, callback) {
-    var req;
-    req = http.request(buster.extend({
+    var req = http.request(buster.extend({
         method: "GET",
         host: "localhost",
         port: 2233
-    }, opt), function (res) {
-        body(res, function (data) {
+    }, opt));
+    req.on("response", function (res) {
+        exports.reqBody(res, function (data) {
             if (callback) {
                 callback(req, res, data);
             }
