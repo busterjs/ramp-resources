@@ -7,52 +7,33 @@ buster.testCase("HTTP proxy", {
     setUp: function (done) {
         var self = this;
         this.proxyMiddleware = httpProxy.create("localhost", 2222);
-        this.requests = [];
-
-        this.backend = http.createServer(function (req, res) {
-            self.requests.push({ req: req, res: res });
-            if (self.onBackendRequest) {
-                h.reqBody(req, function (body) {
-                    self.onBackendRequest(req, res, body);
-                });
-            }
-        });
 
         this.proxy = http.createServer(function (req, res) {
             self.proxyMiddleware.respond(req, res);
         });
 
-        this.backend.listen(2222);
+        this.backend = h.createProxyBackend(2222);
         this.proxy.listen(2233, done);
     },
 
     tearDown: function (done) {
         var cb = buster.countdown(2, done);
-        var i, l;
-
-        for (i = 0, l = this.requests.length; i < l; ++i) {
-            if (!this.requests[i].res.ended) {
-                this.requests[i].res.end();
-            }
-        }
-
+        this.backend.close(cb);
         this.proxy.on("close", cb);
-        this.backend.on("close", cb);
-        this.backend.close();
         this.proxy.close();
     },
 
     "incoming requests": {
         "forwards request to backend": function (done) {
             h.req().end();
-            this.onBackendRequest = done(function (req, res) {
+            this.backend.onRequest = done(function (req, res) {
                 assert(true);
             });
         },
 
         "forwards method and path": function (done) {
             h.req({ method: "GET", path: "/buster" }).end();
-            this.onBackendRequest = done(function () {
+            this.backend.onRequest = done(function () {
                 assert.match(this.requests[0].req, {
                     method: "GET",
                     url: "/buster"
@@ -63,7 +44,7 @@ buster.testCase("HTTP proxy", {
         "forwards url with query parameters": function (done) {
             h.req({ path: "/buster?id=23" }).end();
 
-            this.onBackendRequest = done(function (req, res) {
+            this.backend.onRequest = done(function (req, res) {
                 assert.match(req, { url: "/buster?id=23" });
             });
         },
@@ -73,7 +54,7 @@ buster.testCase("HTTP proxy", {
             req.write("Yo, hey");
             req.end();
 
-            this.onBackendRequest = done(function (req, res, body) {
+            this.backend.onRequest = done(function (req, res, body) {
                 assert.equals(body, "Yo, hey");
             });
         },
@@ -84,7 +65,7 @@ buster.testCase("HTTP proxy", {
                 "X-Buster": "Yes"
             }}).end();
 
-            this.onBackendRequest = done(function (req, res) {
+            this.backend.onRequest = done(function (req, res) {
                 assert.match(req.headers, {
                     "expires": "Sun, 15 Mar 2012 12:18 26 GMT",
                     "x-buster": "Yes"
@@ -99,7 +80,7 @@ buster.testCase("HTTP proxy", {
                 assert(true);
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 res.writeHead(200);
                 res.end();
             };
@@ -110,7 +91,7 @@ buster.testCase("HTTP proxy", {
                 assert.equals(res.statusCode, 202);
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 res.writeHead(202);
                 res.end();
             };
@@ -121,7 +102,7 @@ buster.testCase("HTTP proxy", {
                 assert.equals(body, "Yo, hey");
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 res.writeHead(200);
                 res.end("Yo, hey");
             };
@@ -135,7 +116,7 @@ buster.testCase("HTTP proxy", {
                 });
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 res.writeHead(200, {
                     "Expires": "Sun, 15 Mar 2012 12:18 26 GMT",
                     "X-Buster": "Yes"
@@ -161,7 +142,7 @@ buster.testCase("HTTP proxy", {
         "forwards requests to scoped path": function (done) {
             h.req({ method: "GET", path: "/buster" }).end();
 
-            this.onBackendRequest = done(function () {
+            this.backend.onRequest = done(function () {
                 assert.equals(this.requests[0].req.url, "/app/buster");
             });
         },
@@ -170,7 +151,7 @@ buster.testCase("HTTP proxy", {
             this.proxyMiddleware.path = "/app/";
             h.req({ method: "GET", path: "/buster" }).end();
 
-            this.onBackendRequest = done(function () {
+            this.backend.onRequest = done(function () {
                 assert.equals(this.requests[0].req.url, "/app/buster");
             });
         },
@@ -180,7 +161,7 @@ buster.testCase("HTTP proxy", {
                 assert.equals(res.headers.location, "/buster");
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 res.writeHead(302, { "Location": "/app/buster" });
                 res.end();
             };
@@ -196,7 +177,7 @@ buster.testCase("HTTP proxy", {
         "forwards requests to stripped path": function (done) {
             h.req({ method: "GET", path: "/buster/" }).end();
 
-            this.onBackendRequest = done(function () {
+            this.backend.onRequest = done(function () {
                 assert.equals(this.requests[0].req.url, "/");
             });
         },
@@ -204,7 +185,7 @@ buster.testCase("HTTP proxy", {
         "adds missing slash": function (done) {
             h.req({ method: "GET", path: "/buster" }).end();
 
-            this.onBackendRequest = done(function () {
+            this.backend.onRequest = done(function () {
                 assert.equals(this.requests[0].req.url, "/");
             });
         },
@@ -213,7 +194,7 @@ buster.testCase("HTTP proxy", {
             this.proxyMiddleware.setProxyPath("/buster/");
             h.req({ method: "GET", path: "/buster/bundle.js" }).end();
 
-            this.onBackendRequest = done(function () {
+            this.backend.onRequest = done(function () {
                 assert.equals(this.requests[0].req.url, "/bundle.js");
             });
         },
@@ -224,7 +205,7 @@ buster.testCase("HTTP proxy", {
                 assert.equals(res.headers.location, "/buster/other");
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 res.writeHead(302, { "Location": "/other" });
                 res.end();
             };
@@ -242,7 +223,7 @@ buster.testCase("HTTP proxy", {
                 assert.equals(res.headers.location, "/bar/foo/zing");
             })).end();
 
-            this.onBackendRequest = function (req, res) {
+            this.backend.onRequest = function (req, res) {
                 assert.equals(req.url, "/foo/baz");
                 res.writeHead(301, { Location: "/foo/zing" });
                 res.end();

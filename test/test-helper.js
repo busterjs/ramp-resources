@@ -101,3 +101,30 @@ exports.serverTearDown = function serverTearDown(done) {
     this.server.on("close", done);
     this.server.close();
 };
+
+exports.createProxyBackend = function (port) {
+    var backend = { requests: [] };
+
+    var server = http.createServer(function (req, res) {
+        backend.requests.push({ req: req, res: res });
+        if (backend.onRequest) {
+            exports.reqBody(req, function (body) {
+                backend.onRequest(req, res, body);
+            });
+        }
+    });
+    server.listen(port);
+
+    backend.close = function (done) {
+        var i, l;
+        for (i = 0, l = backend.requests.length; i < l; ++i) {
+            if (!backend.requests[i].res.ended) {
+                backend.requests[i].res.end();
+            }
+        }
+        server.on("close", done);
+        server.close();
+    };
+
+    return backend;
+};
