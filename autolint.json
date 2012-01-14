@@ -10,6 +10,7 @@
         "onevar": false,
         "plusplus": false,
         "nomen": false,
+        "forin": true,
         "predef": [
             "assert",
             "refute",

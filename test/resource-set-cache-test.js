@@ -102,5 +102,25 @@ buster.testCase("Resource set cache", {
                 assert.content(rs.get("/buster.js"), "", done);
             });
         }
+    },
+
+    "resource versions": {
+        "returns cached resource version": function () {
+            assert.equals(this.cache.resourceVersions(), {
+                "/buster.js": ["abcd1234"]
+            });
+        },
+
+        "returns all cached resource version": function () {
+            add(this.rs, "/sinon.js", "Yeah", { etag: "123" });
+            add(this.rs, "/buster.js", "Heh", { etag: "666" });
+            add(this.rs, "/when.js", "When??!?", {});
+            this.cache.inflate(this.rs);
+
+            assert.equals(this.cache.resourceVersions(), {
+                "/buster.js": ["666", "abcd1234"],
+                "/sinon.js": ["123"]
+            });
+        }
     }
 });
