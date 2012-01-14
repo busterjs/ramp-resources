@@ -70,8 +70,9 @@ function body(res, callback) {
     res.on("end", function () { callback(data); });
 }
 
-exports.req = function req(opt, callback) {
-    var req = http.request(buster.extend({
+exports.req = function (opt, callback) {
+    var req;
+    req = http.request(buster.extend({
         method: "GET",
         host: "localhost",
         port: 2233
@@ -99,4 +100,4 @@ exports.createServer = function createServer(middleware, done) {
 exports.serverTearDown = function serverTearDown(done) {
     this.server.on("close", done);
     this.server.close();
-}
+};
