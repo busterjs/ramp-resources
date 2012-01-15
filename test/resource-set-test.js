@@ -256,6 +256,17 @@ buster.testCase("Resource sets", {
                 assert.equals(this.rs.length, 1);
                 assert.equals(this.rs[0], this.rs.get("/hey"));
             }.bind(this)), done(logStack));
+        },
+
+        "removes resource from load path": function (done) {
+            var add1 = this.rs.addResource({ path: "/yo", content: "Ok" });
+            var add2 = this.rs.addResource({ path: "/hey", content: "Not Ok" });
+
+            when.all([add1, add2]).then(done(function () {
+                this.rs.loadPath.append("/yo");
+                this.rs.remove("/yo");
+                assert.equals(this.rs.loadPath.paths(), []);
+            }.bind(this)), done(logStack));
         }
     },
 
