@@ -163,6 +163,12 @@ buster.testCase("Resource middleware", {
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "OK");
             })).end();
+        },
+
+        "modifies script tags accordingly": function (done) {
+            h.req({ path: "/ctx/1/" }, done(function (req, res, body) {
+                assert.match(body, "src=\"/ctx/1/buster.js\"");
+            })).end();
         }
     },
 
