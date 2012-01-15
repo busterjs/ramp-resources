@@ -15,6 +15,7 @@ function createResourceSets() {
         headers: { "X-Buster": "Yes" }
     });
 
+    resourceSets.withBuster.loadPath.append("/buster.js");
     resourceSets.withSinon.addResource({ path: "/sinon.js", content: "Hey" });
 
     return resourceSets;
@@ -33,17 +34,33 @@ buster.testCase("Resource middleware", {
 
         tearDown: h.serverTearDown,
 
-        "root responds with 404": function (done) {
-            h.req({ path: "/" }, done(function (req, res) {
+        "arbitrary path responds with 404": function (done) {
+            h.req({ path: "/hey" }, done(function (req, res) {
                 assert.equals(res.statusCode, 404);
             })).end();
         },
 
-        "contextPath responds with 404": function (done) {
-            this.resources.contextPath = "/resources";
+        "serves default root resource": function (done) {
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.equals(res.headers["content-type"],
+                              "text/html; charset=utf-8");
+                assert.match(body, "<!DOCTYPE html>");
+            })).end();
+        },
 
-            h.req({ path: "/resources" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+        "serves default root resource at context path": function (done) {
+            this.resources.setContextPath("/resources");
+
+            h.req({ path: "/resources" }, done(function (req, res, body) {
+                assert.match(body, "<!DOCTYPE html>");
+            })).end();
+        },
+
+        "serves default root with trailing slash": function (done) {
+            this.resources.setContextPath("/resources");
+
+            h.req({ path: "/resources/" }, done(function (req, res, body) {
+                assert.match(body, "<!DOCTYPE html>");
             })).end();
         },
 
@@ -56,7 +73,7 @@ buster.testCase("Resource middleware", {
         }
     },
 
-    "one resource set mounted": {
+    "resource set mounted": {
         setUp: function (done) {
             this.resources = resourceMiddleWare.create();
             this.resources.mount(this.sets.withBuster);
@@ -65,9 +82,48 @@ buster.testCase("Resource middleware", {
 
         tearDown: h.serverTearDown,
 
-        "root responds with 404": function (done) {
-            h.req({ path: "/" }, done(function (req, res) {
+        "arbitrary path responds with 404": function (done) {
+            h.req({ path: "/arbitrary" }, done(function (req, res) {
                 assert.equals(res.statusCode, 404);
+            })).end();
+        },
+
+        "serves root resource with loadPath scripts": function (done) {
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.equals(res.headers["content-type"],
+                              "text/html; charset=utf-8");
+                assert.match(body, "<script");
+                assert.match(body, "src=\"/buster.js\"");
+            })).end();
+        },
+
+        "serves custom root resource with loadPath scripts": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/",
+                content: "<html></html>"
+            });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.equals(res.headers["content-type"],
+                              "text/html; charset=utf-8");
+                assert.match(body, "<html><script");
+                assert.match(body, "src=\"/buster.js\"");
+                assert.match(body, "</script></html>");
+            })).end();
+        },
+
+        "serves blank root resource with loadPath scripts": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/",
+                content: "<h1>Yo"
+            });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.equals(res.headers["content-type"],
+                              "text/html; charset=utf-8");
+                assert.match(body, "<h1>Yo<script");
+                assert.match(body, "src=\"/buster.js\"");
+                assert.match(body, "</script>");
             })).end();
         },
 
@@ -89,54 +145,6 @@ buster.testCase("Resource middleware", {
         "ignores url parameters": function (done) {
             h.req({ path: "/buster.js?123" }, done(function (req, res, body) {
                 assert.equals(body, "OK");
-            })).end();
-        }
-    },
-
-    "two resource sets mounted": {
-        setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
-            this.resources.mount(this.sets.withBuster);
-            this.resources.mount(this.sets.withSinon);
-            this.server = h.createServer(this.resources, done);
-        },
-
-        tearDown: h.serverTearDown,
-
-        "root responds with 404": function (done) {
-            h.req({ path: "/" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
-            })).end();
-        },
-
-        "serves content from first set": function (done) {
-            h.req({ path: "/buster.js" }, done(function (req, res, body) {
-                assert.equals(body, "OK");
-            })).end();
-        },
-
-        "serves content from second set": function (done) {
-            h.req({ path: "/sinon.js" }, done(function (req, res, body) {
-                assert.equals(body, "Hey");
-            })).end();
-        },
-
-        "prefers first set when duplicates": function (done) {
-            this.sets.withBuster.addResource({
-                path: "/sinon.js",
-                content: "HAHA"
-            });
-
-            h.req({ path: "/sinon.js" }, done(function (req, res, body) {
-                assert.equals(body, "HAHA");
-            })).end();
-        },
-
-        "stops serving from unmounted set": function (done) {
-            this.resources.unmount(this.sets.withBuster);
-
-            h.req({ path: "/buster.js" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
             })).end();
         }
     },
