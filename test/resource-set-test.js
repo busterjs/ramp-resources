@@ -456,7 +456,7 @@ buster.testCase("Resource sets", {
         },
 
         "returns resource set with load path": function (done) {
-            resourceSet.deserialize({ load: ["/buster.js"], resources: [{
+            resourceSet.deserialize({ loadPath: ["/buster.js"], resources: [{
                 path: "/buster.js",
                 content: "Hey mister"
             }, {
