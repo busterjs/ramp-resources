@@ -94,13 +94,24 @@ buster.testCase("Resource set cache", {
             }));
         },
 
-        "removes resource from cache after ttl ms": function (done) {
+        "removes resource from cache after ttl ms": function () {
             this.clock.tick(250);
-            addResourcesAndInflate(this.cache, this.rs, [
-                ["/buster.js", "", { etag: "abcd1234" }]
-            ], function (rs) {
-                assert.content(rs.get("/buster.js"), "", done);
-            });
+            assert.equals(this.cache.resourceVersions(), {});
+        },
+
+        "keeps resources indefinitely with -1 ttl": function (done) {
+            var rs = resourceSet.create();
+            var cache = resourceSetCache.create(-1);
+
+            add(rs, "/buster.js", "Yo!", { etag: "abcd" }).then(function () {
+                cache.inflate(rs).then(done(function () {
+                    this.clock.tick(30 * 24 * 60 * 60 * 1000);
+
+                    assert.equals(cache.resourceVersions(), {
+                        "/buster.js": ["abcd"]
+                    });
+                }.bind(this)));
+            }.bind(this));
         }
     },
 
@@ -118,9 +129,111 @@ buster.testCase("Resource set cache", {
             this.cache.inflate(this.rs);
 
             assert.equals(this.cache.resourceVersions(), {
-                "/buster.js": ["666", "abcd1234"],
+                "/buster.js": ["abcd1234", "666"],
                 "/sinon.js": ["123"]
             });
+        }
+    },
+
+    "freeze": {
+        "guarantees resource is available for provided period": function () {
+            this.cache.inflate(this.rs);
+            this.cache.freeze(300);
+            this.clock.tick(299);
+
+            assert.equals(this.cache.resourceVersions(), {
+                "/buster.js": ["abcd1234"]
+            });
+        },
+
+        "should not shorten a resource's life-span": function () {
+            this.cache.inflate(this.rs);
+            this.cache.freeze(100);
+            this.clock.tick(200);
+
+            assert.equals(this.cache.resourceVersions(), {
+                "/buster.js": ["abcd1234"]
+            });
+        }
+    },
+
+    "size": {
+        "returns cache byte size approximation": function () {
+            // Content OK! 3 bytes
+            // Etag abcd1234 8 bytes
+            // Default headers (names and values) 66 bytes
+            assert.equals(this.cache.size(), 77);
+        },
+
+        "adjusts cache byte size approximation when adding": function () {
+            add(this.rs, "/sinon.js", "Yeah", { etag: "1" }).then(function (r) {
+                this.cache.inflate(this.rs);
+                assert.equals(this.cache.size(), 148);
+            }.bind(this));
+        }
+    },
+
+    "max size": {
+        "purges oldest content when growing too large": function (done) {
+            var rs = resourceSet.create();
+            var cache = resourceSetCache.create(250, 150);
+
+            when.all([
+                add(rs, "/buster.js", "Yo!", { etag: "abcd" }),
+                add(rs, "/sinon.js", "Hey", { etag: "1234" }),
+                add(rs, "/when.js", "Hm", { etag: "0123" })
+            ], function () {
+                cache.inflate(rs).then(done(function () {
+                    assert.equals(cache.resourceVersions(), {
+                        "/sinon.js": ["1234"],
+                        "/when.js": ["0123"]
+                    });
+                }.bind(this)));
+            }.bind(this));
+        },
+
+        "does not purge oldest content when in freeze": function (done) {
+            var rs = resourceSet.create();
+            var rs2 = resourceSet.create();
+            var cache = resourceSetCache.create(250, 175);
+
+            when.all([
+                add(rs, "/buster.js", "Yo!", { etag: "abcd" }),
+                add(rs, "/sinon.js", "Hey", { etag: "1234" }),
+                add(rs2, "/when.js", "Hm", { etag: "0123" })
+            ]).then(done(function () {
+                cache.inflate(rs);
+                cache.freeze(50);
+                cache.inflate(rs2);
+
+                assert.equals(cache.resourceVersions(), {
+                    "/buster.js": ["abcd"],
+                    "/sinon.js": ["1234"],
+                    "/when.js": ["0123"]
+                });
+            }));
+        },
+
+        "purges oldest content after current freeze": function (done) {
+            var rs = resourceSet.create();
+            var rs2 = resourceSet.create();
+            var cache = resourceSetCache.create(250, 175);
+
+            when.all([
+                add(rs, "/buster.js", "Yo!", { etag: "abcd" }),
+                add(rs, "/sinon.js", "Hey", { etag: "1234" }),
+                add(rs2, "/when.js", "Hm", { etag: "0123" })
+            ]).then(done(function () {
+                cache.inflate(rs);
+                cache.freeze(50);
+                cache.inflate(rs2);
+                this.clock.tick(50);
+
+                assert.equals(cache.resourceVersions(), {
+                    "/sinon.js": ["1234"],
+                    "/when.js": ["0123"]
+                });
+            }.bind(this)));
         }
     }
 });
