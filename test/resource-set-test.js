@@ -318,6 +318,7 @@ buster.testCase("Resource sets", {
             add.then(function () {
                 this.rs.serialize().then(done(function (serialized) {
                     assert.equals(serialized, {
+                        loadPath: [],
                         resources: [{
                             encoding: "utf-8",
                             path: "/buster.js",
@@ -339,6 +340,7 @@ buster.testCase("Resource sets", {
             add.then(function () {
                 this.rs.serialize().then(done(function (serialized) {
                     assert.equals(serialized, {
+                        loadPath: [],
                         resources: [{
                             encoding: "utf-8",
                             path: "/buster.js",
@@ -360,6 +362,7 @@ buster.testCase("Resource sets", {
             add.then(function () {
                 this.rs.serialize().then(done(function (serialized) {
                     assert.equals(serialized, {
+                        loadPath: [],
                         resources: [{
                             path: "/app",
                             backend: "http://localhost:3000/app"
@@ -413,6 +416,16 @@ buster.testCase("Resource sets", {
                     content: "var helloFromBar = 1;",
                     etag: /^[a-z0-9]+$/
                 }]);
+            }));
+        },
+
+        "includes load path": function (done) {
+            this.rs.addResources(["foo.js", "bar.js"]).then(function () {
+                this.rs.loadPath.append(["foo.js", "bar.js"]);
+            }.bind(this));
+
+            this.rs.serialize().then(done(function (serialized) {
+                assert.match(serialized.loadPath, ["/foo.js", "/bar.js"]);
             }));
         }
     },
