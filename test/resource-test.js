@@ -330,7 +330,7 @@ buster.testCase("Resources", {
                 content: "Hey"
             });
 
-            rs.addProcessor(function (content) {
+            rs.addProcessor(function (resource, content) {
                 return content + "!!";
             });
 
@@ -342,10 +342,10 @@ buster.testCase("Resources", {
                 content: "Hey"
             });
 
-            rs.addProcessor(function (content) {
+            rs.addProcessor(function (resource, content) {
                 return content + "!!";
             });
-            rs.addProcessor(function (content) {
+            rs.addProcessor(function (resource, content) {
                 return content + "??";
             });
 
@@ -357,10 +357,10 @@ buster.testCase("Resources", {
                 content: function () { return "42"; }
             });
 
-            rs.addProcessor(function (content) {
+            rs.addProcessor(function (resource, content) {
                 return content + "!!";
             });
-            rs.addProcessor(function (content) {
+            rs.addProcessor(function (resource, content) {
                 return content + "??";
             });
 
