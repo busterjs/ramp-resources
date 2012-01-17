@@ -90,6 +90,35 @@ buster.testCase("Resource sets", {
         }
     },
 
+    "adding processor": {
+        "adds processor to existing resources": function (done) {
+            this.rs.addResource(
+                { path: "/buster.js", content: "Ok" }
+            ).then(function () {
+                this.rs.addProcessor(function (resource, content) {
+                    return content + "!";
+                });
+                this.rs.get("/buster.js").content().then(done(function (c) {
+                    assert.equals(c, "Ok!");
+                }));
+            }.bind(this));
+        },
+
+        "adds processor to future resources": function (done) {
+            this.rs.addProcessor(function (resource, content) {
+                return content + "!";
+            });
+
+            this.rs.addResource(
+                { path: "/buster.js", content: "Ok" }
+            ).then(function () {
+                this.rs.get("/buster.js").content().then(done(function (c) {
+                    assert.equals(c, "Ok!");
+                }));
+            }.bind(this));
+        }
+    },
+
     "adding buster.resource objects": {
         setUp: function () {
             this.resource = resource.create("/buster.js", {
