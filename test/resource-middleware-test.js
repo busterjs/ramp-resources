@@ -1,6 +1,7 @@
 var buster = require("buster");
 var resourceSet = require("../lib/resource-set");
 var resourceMiddleWare = require("../lib/resource-middleware");
+var when = require("when");
 var h = require("./test-helper");
 
 function createResourceSets() {
@@ -131,6 +132,47 @@ buster.testCase("Resource middleware", {
             h.req({ path: "/buster.js" }, done(function (req, res, body) {
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "OK");
+            })).end();
+        },
+
+        "responds with 500 if resource content fails": function (done) {
+            var d = when.defer();
+            d.resolver.reject("Bleh");
+            this.sets.withBuster.addResource({
+                path: "/dabomb",
+                content: function () { return d.promise; }
+            });
+
+            h.req({ path: "/dabomb" }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 500);
+                assert.match(body, "Bleh");
+            })).end();
+        },
+
+        "responds with 500 and stack trace when available": function (done) {
+            var d = when.defer();
+            d.resolver.reject(new Error("Damnit"));
+            this.sets.withBuster.addResource({
+                path: "/dabomb",
+                content: function () { return d.promise; }
+            });
+
+            h.req({ path: "/dabomb" }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 500);
+                assert.match(body, "test/resource-middleware-test");
+                assert.match(body, "Damnit");
+            })).end();
+        },
+
+        "responds with 500 when resource content throws": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/dabomb",
+                content: function () { throw new Error("Oh noes"); }
+            });
+
+            h.req({ path: "/dabomb" }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 500);
+                assert.match(body, "Oh noes");
             })).end();
         },
 
