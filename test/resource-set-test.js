@@ -468,7 +468,8 @@ buster.testCase("Resource sets", {
                     done(function (err) {
                         assert.defined(err);
                         assert.match(err, "Oops");
-                    }));
+                    })
+                );
             }.bind(this));
         }
     },
