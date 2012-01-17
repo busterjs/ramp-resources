@@ -95,6 +95,56 @@ buster.testCase("Resource set cache", {
             });
         },
 
+        "does not cache resources when content() rejects": function (done) {
+            var rs2 = resourceSet.create();
+            var d = when.defer();
+            d.resolver.reject("Oh noes");
+            addResourcesAndInflate(this.cache, this.rs, [
+                ["/sinon.js", function () { return d.promise; }, { etag: "1" }]
+            ], function () {
+                addResourcesAndInflate(this.cache, rs2, [
+                    ["/sinon.js", "", { etag: "1" }]
+                ], function (rs) {
+                    assert.content(rs.get("/sinon.js"), "", done);
+                });
+            }.bind(this));
+        },
+
+        "does not look up from cache when content() rejects": function (done) {
+            var rs2 = resourceSet.create();
+            var d = when.defer();
+            d.resolver.reject("Oh noes");
+            addResourcesAndInflate(this.cache, this.rs, [
+                ["/a.js", "Cached", { etag: "1" }]
+            ], function () {
+                addResourcesAndInflate(this.cache, rs2, [
+                    ["/a.js", function () { return d.promise; }, { etag: "1" }]
+                ], function (rs) {
+                    rs.get("/a.js").content().then(
+                        function () {},
+                        done(function (err) {
+                            assert.equals(err, "Oh noes");
+                        })
+                    );
+                });
+            }.bind(this));
+        },
+
+        "does not look up from cache when content() throws": function (done) {
+            var rs2 = resourceSet.create();
+            addResourcesAndInflate(this.cache, this.rs, [
+                ["/a.js", "Cached", { etag: "1" }]
+            ], function () {
+                addResourcesAndInflate(this.cache, rs2, [
+                    ["/a.js", function () { throw "WOW"; }, { etag: "1" }]
+                ], done(function (rs) {
+                    assert.exception(function () {
+                        rs.get("/a.js").content();
+                    });
+                }));
+            }.bind(this));
+        },
+
         "uses entire cached resource": function (done) {
             addResourcesAndInflate(this.cache, this.rs, [
                 ["/sinon.js", "Huh", {
