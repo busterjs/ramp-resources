@@ -305,7 +305,7 @@ buster.testCase("Resource sets", {
                 this.rs.addResource({ path: "/1.js", content: "1.js" }),
                 this.rs.addResource({ path: "/2.js", content: "2.js" }),
                 this.rs.addResource({ path: "/3.js", content: "3.js" })
-            ]).then(function () { done(); });
+            ]).then(done);
         },
 
         "forEach": function () {
