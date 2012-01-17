@@ -366,5 +366,31 @@ buster.testCase("Resources", {
 
             assert.content(rs, "42!!??", done);
         }
+    },
+
+    "serialize": {
+        "fails if content rejects": function (done) {
+            var d = when.defer();
+            d.resolver.reject("MEH");
+            var res = resource.create("/meh", {
+                content: function () { return d.promise; }
+            });
+
+            res.serialize().then(function () {}, done(function (err) {
+                assert.defined(err);
+                assert.match(err, "MEH");
+            }));
+        },
+
+        "fails if content throws": function (done) {
+            var res = resource.create("/meh", {
+                content: function () { throw new Error("MEH"); }
+            });
+
+            res.serialize().then(function () {}, done(function (err) {
+                assert.defined(err);
+                assert.match(err, "MEH");
+            }));
+        }
     }
 });

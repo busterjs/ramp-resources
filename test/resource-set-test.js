@@ -456,6 +456,20 @@ buster.testCase("Resource sets", {
             this.rs.serialize().then(done(function (serialized) {
                 assert.match(serialized.loadPath, ["/foo.js", "/bar.js"]);
             }));
+        },
+
+        "fails if a resource can not be serialized": function (done) {
+            this.rs.addResource({
+                path: "/foo.js",
+                content: function () { throw new Error("Oops"); }
+            }).then(function () {
+                this.rs.serialize().then(
+                    function () {},
+                    done(function (err) {
+                        assert.defined(err);
+                        assert.match(err, "Oops");
+                    }));
+            }.bind(this));
         }
     },
 
