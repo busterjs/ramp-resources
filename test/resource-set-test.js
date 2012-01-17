@@ -470,7 +470,7 @@ buster.testCase("Resource sets", {
             });
         },
 
-        "returns resource set with two resources": function (done) {
+        "resolves resource set with two resources": function (done) {
             resourceSet.deserialize({ resources: [{
                 path: "/buster.js",
                 content: "Hey mister"
@@ -484,7 +484,7 @@ buster.testCase("Resource sets", {
             }));
         },
 
-        "returns resource set with load path": function (done) {
+        "resolves resource set with load path": function (done) {
             resourceSet.deserialize({ loadPath: ["/buster.js"], resources: [{
                 path: "/buster.js",
                 content: "Hey mister"
@@ -510,6 +510,15 @@ buster.testCase("Resource sets", {
                                          rs2.get("/bar.js"), cb);
                 });
             });
+        },
+
+        "rejects if deserialized data is corrupt": function (done) {
+            resourceSet.deserialize({ loadPath: ["/buster.js"], resources: [{
+                path: "/buster.js"
+            }] }).then(function () {}, done(function (err) {
+                assert.defined(err);
+                assert.match(err, "No content");
+            }));
         }
     },
 
