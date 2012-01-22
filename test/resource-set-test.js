@@ -160,7 +160,7 @@ buster.testCase("Resource sets", {
             }.bind(this));
         },
 
-        "overwrites resource with same path in numeric property": function (done) {
+        "overwrites resource at numeric property": function (done) {
             var path = this.resource.path;
             var add1 = this.rs.addResource({ path: "/meh", content: "Ok" });
             var add2 = this.rs.addResource(this.resource);
