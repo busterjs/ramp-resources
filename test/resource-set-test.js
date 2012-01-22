@@ -702,6 +702,7 @@ buster.testCase("Resource sets", {
             ]).then(function () {
                 rs1.concat().then(done(function (rs) {
                     assert.defined(rs.get("/c"));
+                    assert.equals(rs.get("/c").combine, ["/a", "/b"]);
                 }));
             });
         },
