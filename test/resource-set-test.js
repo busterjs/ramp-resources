@@ -671,6 +671,18 @@ buster.testCase("Resource sets", {
             }));
         },
 
+        "concats backend resources": function (done) {
+            var rs1 = resourceSet.create();
+
+            rs1.addResource({
+                path: "/buster",
+                backend: "localhost:1111"
+            }).then(done(function () {
+                var rs = rs1.concat();
+                assert.equals(rs.get("buster").backend, "localhost:1111");
+            }));
+        },
+
         "uses rootpath of target resource set": function () {
             var rs1 = resourceSet.create("/tmp");
             var rs2 = resourceSet.create("/var");
