@@ -21,7 +21,8 @@
     "dependencies": {
         "buster-core": ">= 0.5",
         "mime": "~1",
-        "buster-glob": "~0.1"
+        "buster-glob": "~0.1",
+        "when": ">=0.10"
     },
     "devDependencies": {
         "buster": "*"
