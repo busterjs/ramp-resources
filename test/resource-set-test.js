@@ -137,17 +137,40 @@ buster.testCase("Resource sets", {
         }
     },
 
-    "resourceSet as array-like": {
+    "as array-like": {
         setUp: function () {
             this.resource = resource.create("/buster.js", {
                 content: "var buster = {};"
             });
         },
 
-        "adding resource increments length": function (done) {
+        "increments length when adding resource": function (done) {
             this.rs.addResource(this.resource).then(done(function (rs) {
                 assert.equals(this.rs.length, 1);
             }.bind(this)));
+        },
+
+        "does not increment length when overwriting": function (done) {
+            var path = this.resource.path;
+            this.rs.addResource(this.resource).then(function (rs) {
+                var resource = { path: path, content: "Ok" };
+                this.rs.addResource(resource).then(done(function () {
+                    assert.equals(this.rs.length, 1);
+                }.bind(this)));
+            }.bind(this));
+        },
+
+        "overwrites resource with same path in numeric property": function (done) {
+            var path = this.resource.path;
+            var add1 = this.rs.addResource({ path: "/meh", content: "Ok" });
+            var add2 = this.rs.addResource(this.resource);
+            var add3 = this.rs.addResource({ path: "/doh", content: "Ye" });
+            when.all([add1, add2, add3]).then(function (rs) {
+                var resource = { path: path, content: "Ok", etag: "9089" };
+                this.rs.addResource(resource).then(done(function () {
+                    assert.equals(this.rs[1].etag, "9089");
+                }.bind(this)));
+            }.bind(this));
         },
 
         "exposes added resource on numeric index": function (done) {
@@ -655,6 +678,19 @@ buster.testCase("Resource sets", {
             var rs3 = rs1.concat(rs2);
 
             assert.equals(rs3.rootPath, "/tmp");
+        },
+
+        "restricts length to unique resources": function (done) {
+            var rs1 = resourceSet.create();
+            var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
+            var add2 = rs1.addResource({ path: "/sinon.js", content: "Yep" });
+
+            when.all([add1, add2]).then(done(function () {
+                var rs2 = rs1.concat();
+                var rs3 = rs1.concat();
+                var rs4 = rs1.concat(rs2, rs3);
+                assert.equals(rs4.length, 2);
+            }));
         }
     },
 
