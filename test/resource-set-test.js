@@ -693,6 +693,19 @@ buster.testCase("Resource sets", {
             }));
         },
 
+        "concats combine resources": function (done) {
+            var rs1 = resourceSet.create();
+            rs1.addResources([
+                { path: "/a", content: "1" },
+                { path: "/b", content: "2" },
+                { path: "/c", combine: ["/a", "/b"] }
+            ]).then(function () {
+                rs1.concat().then(done(function (rs) {
+                    assert.defined(rs.get("/c"));
+                }));
+            });
+        },
+
         "uses rootpath of target resource set": function () {
             var rs1 = resourceSet.create("/tmp");
             var rs2 = resourceSet.create("/var");
