@@ -448,6 +448,61 @@ buster.testCase("Resource sets", {
             }));
         },
 
+        "clears content for cached resources": function (done) {
+            this.rs.addResource({
+                path: "/foo.js",
+                content: "Yeye",
+                etag: "abc"
+            });
+
+            this.rs.addResource({
+                path: "/bar.js",
+                content: "Oh noes",
+                etag: "123"
+            });
+
+            this.rs.serialize({
+                "/foo.js": ["abc", "abd"],
+                "/bar.js": ["ddd", "000", "123", "124"]
+            }).then(done(function (serialized) {
+                assert.equals(serialized.resources[0].content, "");
+                assert.equals(serialized.resources[1].content, "");
+            }));
+        },
+
+        "does not call content() at all for cached resources": function (done) {
+            this.rs.addResource(
+                { path: "/foo.js", content: this.stub().throws(), etag: "abc" }
+            );
+            this.rs.addResource(
+                { path: "/bar.js", content: this.stub().throws(), etag: "123" }
+            );
+
+            this.rs.serialize({
+                "/foo.js": ["abc", "abd"],
+                "/bar.js": ["ddd", "000", "123", "124"]
+            }).then(done(function (serialized) {
+                assert.equals(serialized.resources.length, 2);
+            }));
+        },
+
+        "does not cache resources where etag does not match": function (done) {
+            this.rs.addResource(
+                { path: "/foo.js", content: "Ok", etag: "abc" }
+            );
+            this.rs.addResource(
+                { path: "/bar.js", content: "Meh", etag: "123" }
+            );
+
+            this.rs.serialize({
+                "/foo.js": ["acc", "abd"],
+                "/baz.js": ["ddd", "000", "123", "124"]
+            }).then(done(function (serialized) {
+                assert.equals(serialized.resources[0].content, "Ok");
+                assert.equals(serialized.resources[1].content, "Meh");
+            }));
+        },
+
         "includes load path": function (done) {
             this.rs.addResources(["foo.js", "bar.js"]).then(function () {
                 this.rs.loadPath.append(["foo.js", "bar.js"]);
