@@ -279,6 +279,16 @@ buster.testCase("Resource sets", {
                     assert.content(rs, concat, done);
                 }, done(logStack));
             }.bind(this), done(logStack));
+        },
+
+        "waits for pending adds before adding": function (done) {
+            this.rs.addResources([
+                "foo.js", "bar.js",
+                { path: "baz.js", combine: ["/foo.js", "/bar.js"] }
+            ]).then(function (resources) {
+                var concat = "var thisIsTheFoo = 5;var helloFromBar = 1;";
+                assert.content(resources[2], concat, done);
+            }, done(logStack));
         }
     },
 
