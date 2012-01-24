@@ -471,5 +471,33 @@ buster.testCase("Resource middleware", {
             });
             h.req({ path: "/oh/my/here/be/proxy/app" }).end();
         }
+    },
+
+    "mountPoints": {
+        setUp: function () {
+            this.resources = resourceMiddleWare.create();
+        },
+
+        "returns empty array when nothing is mounted": function () {
+            assert.equals(this.resources.mountPoints(), []);
+        },
+
+        "returns array of single mount point": function () {
+            this.resources.mount("/buster", this.sets.withBuster);
+            assert.equals(this.resources.mountPoints(), ["/buster"]);
+        },
+
+        "returns array of mount points in prioritized order": function () {
+            this.resources.mount("/sinon/baby", this.sets.withSinon);
+            this.resources.mount("/buster", this.sets.withBuster);
+            assert.equals(this.resources.mountPoints(),
+                          ["/sinon/baby", "/buster"]);
+        },
+
+        "does not include unmounted set": function () {
+            this.resources.mount("/sinon/baby", this.sets.withSinon);
+            this.resources.unmount("/sinon/baby");
+            assert.equals(this.resources.mountPoints(), []);
+        }
     }
 });
