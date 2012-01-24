@@ -473,6 +473,39 @@ buster.testCase("Resource middleware", {
         }
     },
 
+    "unmount": {
+        setUp: function (done) {
+            this.resources = resourceMiddleWare.create();
+            this.resources.mount("/buster", this.sets.withBuster);
+            this.server = h.createServer(this.resources, done);
+        },
+
+        tearDown: h.serverTearDown,
+
+        "stops serving resource set at path": function (done) {
+            this.resources.unmount("/buster");
+            h.req({ path: "/buster/buster.js" }, done(function (req, res) {
+                assert.equals(res.statusCode, 404);
+            })).end();
+        },
+
+        "ignores trailing slash when unmounting": function (done) {
+            this.resources.unmount("/buster/");
+            h.req({ path: "/buster/buster.js" }, done(function (req, res) {
+                assert.equals(res.statusCode, 404);
+            })).end();
+        },
+
+        "keeps serving other resource sets": function (done) {
+            this.resources.mount("/sinon", this.sets.withSinon);
+            this.resources.unmount("/buster");
+            h.req({ path: "/sinon/sinon.js" }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "Hey");
+            })).end();
+        }
+    },
+
     "mountPoints": {
         setUp: function () {
             this.resources = resourceMiddleWare.create();
