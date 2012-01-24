@@ -22,12 +22,29 @@ function createResourceSets() {
     return resourceSets;
 }
 
+function proxySetUp(options) {
+    return function (done) {
+        this.backend = h.createProxyBackend(2222);
+        this.resources = resourceMiddleWare.create();
+        this.rs = resourceSet.create();
+        this.rs.addResource({ path: options.path, backend: options.backend });
+        this.resources.mount(options.mountPath, this.rs);
+        this.server = h.createServer(this.resources, done);
+    };
+}
+
+function proxyTearDown(done) {
+    var cb = buster.countdown(2, done);
+    this.backend.close(cb);
+    h.serverTearDown.call(this, cb);
+}
+
 buster.testCase("Resource middleware", {
     setUp: function () {
         this.sets = createResourceSets();
     },
 
-    "no resource sets mounted": {
+    "no resource sets": {
         setUp: function (done) {
             this.resources = resourceMiddleWare.create();
             this.server = h.createServer(this.resources, done);
@@ -41,27 +58,16 @@ buster.testCase("Resource middleware", {
             })).end();
         },
 
-        "serves default root resource": function (done) {
-            h.req({ path: "/" }, done(function (req, res, body) {
-                assert.equals(res.headers["content-type"],
-                              "text/html; charset=utf-8");
-                assert.match(body, "<!DOCTYPE html>");
+        "root responds with 404": function (done) {
+            h.req({ path: "/" }, done(function (req, res) {
+                assert.equals(res.statusCode, 404);
             })).end();
         },
 
-        "serves default root resource at context path": function (done) {
-            this.resources.setContextPath("/resources");
-
-            h.req({ path: "/resources" }, done(function (req, res, body) {
-                assert.match(body, "<!DOCTYPE html>");
-            })).end();
-        },
-
-        "serves default root with trailing slash": function (done) {
-            this.resources.setContextPath("/resources");
-
-            h.req({ path: "/resources/" }, done(function (req, res, body) {
-                assert.match(body, "<!DOCTYPE html>");
+        "requests for context path yields 404": function (done) {
+            this.resources.setContextPath("/ctx/1");
+            h.req({ path: "/ctx/1" }, done(function (req, res) {
+                assert.equals(res.statusCode, 404);
             })).end();
         },
 
@@ -77,7 +83,7 @@ buster.testCase("Resource middleware", {
     "resource set mounted": {
         setUp: function (done) {
             this.resources = resourceMiddleWare.create();
-            this.resources.mount(this.sets.withBuster);
+            this.resources.mount("/", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
 
@@ -191,10 +197,78 @@ buster.testCase("Resource middleware", {
         }
     },
 
+    "resource set mounted at path": {
+        setUp: function (done) {
+            this.resources = resourceMiddleWare.create();
+            this.resources.mount("/buster/2.0", this.sets.withBuster);
+            this.server = h.createServer(this.resources, done);
+        },
+
+        tearDown: h.serverTearDown,
+
+        "serves resource": function (done) {
+            h.req({
+                path: "/buster/2.0/buster.js"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "OK");
+            })).end();
+        },
+
+        "ignores trailing slash in mount path": function (done) {
+            this.resources.mount("/buster/2.0/", this.sets.withSinon);
+            h.req({
+                path: "/buster/2.0/buster.js"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 404);
+            })).end();
+        },
+
+        "serves separate resource set at different location": function (done) {
+            this.resources.mount("/sinon/", this.sets.withSinon);
+            h.req({
+                path: "/sinon/sinon.js"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "Hey");
+            })).end();
+        },
+
+        "does not leak between multiple resource sets": function (done) {
+            this.resources.mount("/sinon/", this.sets.withSinon);
+            h.req({
+                path: "/sinon/buster.js"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 404);
+            })).end();
+        },
+
+        "serves resource under context path": function (done) {
+            this.resources.setContextPath("/MEGA-COMPU-GLOBAL-HYPER-NET");
+            h.req({
+                path: "/MEGA-COMPU-GLOBAL-HYPER-NET/buster/2.0/buster.js"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "OK");
+            })).end();
+        },
+
+        "serves multiple sets in context path": function (done) {
+            this.resources.setContextPath("/a/b/c");
+            this.resources.mount("/sinon/", this.sets.withSinon);
+            h.req({
+                path: "/a/b/c/sinon/sinon.js"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "Hey");
+            })).end();
+        }
+    },
+
     "with context path": {
         setUp: function (done) {
             this.resources = resourceMiddleWare.create("/ctx/1");
-            this.resources.mount(this.sets.withBuster);
+            this.resources.mount("/", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
 
@@ -211,24 +285,33 @@ buster.testCase("Resource middleware", {
             h.req({ path: "/ctx/1/" }, done(function (req, res, body) {
                 assert.match(body, "src=\"/ctx/1/buster.js\"");
             })).end();
+        },
+
+        "serves default root resource at context path": function (done) {
+            this.resources.setContextPath("/ctx/1");
+
+            h.req({ path: "/ctx/1" }, done(function (req, res, body) {
+                assert.match(body, "<!DOCTYPE html>");
+            })).end();
+        },
+
+        "serves default root with trailing slash": function (done) {
+            this.resources.setContextPath("/ctx/1/");
+
+            h.req({ path: "/ctx/1/" }, done(function (req, res, body) {
+                assert.match(body, "<!DOCTYPE html>");
+            })).end();
         }
     },
 
     "with proxy resource matching path": {
-        setUp: function (done) {
-            this.backend = h.createProxyBackend(2222);
-            this.resources = resourceMiddleWare.create();
-            var rs = resourceSet.create();
-            rs.addResource({ path: "/app", backend: "localhost:2222" });
-            this.resources.mount(rs);
-            this.server = h.createServer(this.resources, done);
-        },
+        setUp: proxySetUp({
+            path: "/app",
+            mountPath: "/",
+            backend: "localhost:2222"
+        }),
 
-        tearDown: function (done) {
-            var cb = buster.countdown(2, done);
-            this.backend.close(cb);
-            h.serverTearDown.call(this, cb);
-        },
+        tearDown: proxyTearDown,
 
         "hits backend through proxy": function (done) {
             this.backend.onRequest = done(function (req, res) {
@@ -277,23 +360,13 @@ buster.testCase("Resource middleware", {
     },
 
     "with proxy resource on different path": {
-        setUp: function (done) {
-            this.backend = h.createProxyBackend(2222);
-            this.resources = resourceMiddleWare.create();
-            var rs = resourceSet.create();
-            rs.addResource({
-                path: "/app",
-                backend: "localhost:2222/test-app"
-            });
-            this.resources.mount(rs);
-            this.server = h.createServer(this.resources, done);
-        },
+        setUp: proxySetUp({
+            path: "/app",
+            mountPath: "/",
+            backend: "localhost:2222/test-app"
+        }),
 
-        tearDown: function (done) {
-            var cb = buster.countdown(2, done);
-            this.backend.close(cb);
-            h.serverTearDown.call(this, cb);
-        },
+        tearDown: proxyTearDown,
 
         "hits backend through proxy": function (done) {
             this.backend.onRequest = done(function (req, res) {
@@ -314,6 +387,55 @@ buster.testCase("Resource middleware", {
                 path: "/sessions/app/service.json"
             }).end("Booyah");
         }
+    },
+
+    "with proxy resource on mount path": {
+        setUp: proxySetUp({
+            path: "/app",
+            mountPath: "/here/be/proxy",
+            backend: "localhost:2222"
+        }),
+
+        tearDown: proxyTearDown,
+
+        "hits backend through proxy": function (done) {
+            this.backend.onRequest = done(function (req, res) {
+                assert.equals(req.url, "/app");
+            });
+            h.req({ path: "/here/be/proxy/app" }).end();
+        },
+
+        "hits backend through proxy with context path": function (done) {
+            this.resources.setContextPath("/oh/my");
+            this.backend.onRequest = done(function (req, res) {
+                assert.equals(req.url, "/app");
+            });
+            h.req({ path: "/oh/my/here/be/proxy/app" }).end();
+        }
+    },
+
+    "with proxy resource on mount path and different path": {
+        setUp: proxySetUp({
+            path: "/app",
+            mountPath: "/here/be/proxy",
+            backend: "localhost:2222/elsewhere"
+        }),
+
+        tearDown: proxyTearDown,
+
+        "hits backend through proxy": function (done) {
+            this.backend.onRequest = done(function (req, res) {
+                assert.equals(req.url, "/elsewhere/app/stuff");
+            });
+            h.req({ path: "/here/be/proxy/app/stuff" }).end();
+        },
+
+        "hits backend through proxy with context path": function (done) {
+            this.resources.setContextPath("/oh/my");
+            this.backend.onRequest = done(function (req, res) {
+                assert.equals(req.url, "/elsewhere/app");
+            });
+            h.req({ path: "/oh/my/here/be/proxy/app" }).end();
+        }
     }
 });
-
