@@ -64,20 +64,24 @@ B.assertions.add("resourceEqual", {
     assertMessage: "Expected resources ${0} and ${1} to be the same"
 });
 
-exports.reqBody = function (res, callback) {
+exports.reqBody = function (res, encoding, callback) {
     var data = "";
+    res.setEncoding(encoding);
     res.on("data", function (chunk) { data += chunk; });
     res.on("end", function () { callback(data); });
 };
 
 exports.req = function (opt, callback) {
+    opt = opt || {};
+    var encoding = opt.encoding || "utf-8";
+    delete opt.encoding;
     var req = http.request(buster.extend({
         method: "GET",
         host: "localhost",
         port: 2233
     }, opt));
     req.on("response", function (res) {
-        exports.reqBody(res, function (data) {
+        exports.reqBody(res, encoding, function (data) {
             if (callback) {
                 callback(req, res, data);
             }
@@ -108,7 +112,7 @@ exports.createProxyBackend = function (port) {
     var server = http.createServer(function (req, res) {
         backend.requests.push({ req: req, res: res });
         if (backend.onRequest) {
-            exports.reqBody(req, function (body) {
+            exports.reqBody(req, "utf-8", function (body) {
                 backend.onRequest(req, res, body);
             });
         }

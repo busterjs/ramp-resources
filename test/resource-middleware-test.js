@@ -194,6 +194,40 @@ buster.testCase("Resource middleware", {
             h.req({ path: "/buster.js?123" }, done(function (req, res, body) {
                 assert.equals(body, "OK");
             })).end();
+        },
+
+        "serves binary resource correctly": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/3x3-cross.png",
+                content: new Buffer([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0,
+                                     13, 73, 72, 68, 82, 0, 0, 0, 3, 0, 0, 0,
+                                     3, 8, 6, 0, 0, 0, 86, 40, 181, 191, 0, 0,
+                                     0, 1, 115, 82, 71, 66, 0, 174, 206, 28,
+                                     233, 0, 0, 0, 6, 98, 75, 71, 68, 0, 104,
+                                     0, 87, 0, 86, 187, 250, 75, 7, 0, 0, 0, 9,
+                                     112, 72, 89, 115, 0, 0, 11, 19, 0, 0, 11,
+                                     19, 1, 0, 154, 156, 24, 0, 0, 0, 7, 116,
+                                     73, 77, 69, 7, 220, 1, 5, 22, 8, 8, 125,
+                                     63, 114, 142, 0, 0, 0, 8, 116, 69, 88, 116,
+                                     67, 111, 109, 109, 101, 110, 116, 0, 246,
+                                     204, 150, 191, 0, 0, 0, 20, 73, 68, 65, 84,
+                                     8, 215, 99, 96, 96, 96, 248, 207, 0, 1, 48,
+                                     26, 147, 241, 31, 0, 89, 205, 4, 252, 43,
+                                     130, 175, 235, 0, 0, 0, 0, 73, 69, 78, 68,
+                                     174, 66, 96, 130]),
+                encoding: "base64"
+            });
+
+            h.req({
+                path: "/3x3-cross.png",
+                encoding: "base64"
+            }, done(function (req, res, body) {
+                assert.equals(body, "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABW" +
+                              "KLW/AAAAAXNSR0IArs4c6QAAAAZiS0dEAGgAVwBWu/pLBw" +
+                              "AAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wBBRYI" +
+                              "CH0/co4AAAAIdEVYdENvbW1lbnQA9syWvwAAABRJREFUCN" +
+                              "djYGBg+M8AATAak/EfAFnNBPwrgq/rAAAAAElFTkSuQmCC");
+            })).end();
         }
     },
 
