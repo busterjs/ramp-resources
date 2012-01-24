@@ -28,7 +28,7 @@ function proxySetUp(options) {
         this.resources = resourceMiddleWare.create();
         this.rs = resourceSet.create();
         this.rs.addResource({ path: options.path, backend: options.backend });
-        this.resources.mount(options.mountPath, this.rs);
+        this.resources.mount(options.mountPoint, this.rs);
         this.server = h.createServer(this.resources, done);
     };
 }
@@ -307,7 +307,7 @@ buster.testCase("Resource middleware", {
     "with proxy resource matching path": {
         setUp: proxySetUp({
             path: "/app",
-            mountPath: "/",
+            mountPoint: "/",
             backend: "localhost:2222"
         }),
 
@@ -362,7 +362,7 @@ buster.testCase("Resource middleware", {
     "with proxy resource on different path": {
         setUp: proxySetUp({
             path: "/app",
-            mountPath: "/",
+            mountPoint: "/",
             backend: "localhost:2222/test-app"
         }),
 
@@ -392,7 +392,7 @@ buster.testCase("Resource middleware", {
     "with proxy resource on mount path": {
         setUp: proxySetUp({
             path: "/app",
-            mountPath: "/here/be/proxy",
+            mountPoint: "/here/be/proxy",
             backend: "localhost:2222"
         }),
 
@@ -417,7 +417,7 @@ buster.testCase("Resource middleware", {
     "with proxy resource on mount path and different path": {
         setUp: proxySetUp({
             path: "/app",
-            mountPath: "/here/be/proxy",
+            mountPoint: "/here/be/proxy",
             backend: "localhost:2222/elsewhere"
         }),
 
