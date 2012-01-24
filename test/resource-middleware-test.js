@@ -342,7 +342,7 @@ buster.testCase("Resource middleware", {
         setUp: proxySetUp({
             path: "/app",
             mountPoint: "/",
-            backend: "localhost:2222"
+            backend: "localhost:2222/app"
         }),
 
         tearDown: proxyTearDown,
@@ -404,7 +404,7 @@ buster.testCase("Resource middleware", {
 
         "hits backend through proxy": function (done) {
             this.backend.onRequest = done(function (req, res) {
-                assert.equals(req.url, "/test-app/app");
+                assert.equals(req.url, "/test-app");
             });
             h.req({ path: "/app" }).end();
         },
@@ -413,7 +413,7 @@ buster.testCase("Resource middleware", {
             this.resources.setContextPath("/sessions");
 
             this.backend.onRequest = done(function (req, res) {
-                assert.equals(req.url, "/test-app/app/service.json");
+                assert.equals(req.url, "/test-app/service.json");
                 assert.equals(req.method, "POST");
             });
             h.req({
@@ -434,7 +434,7 @@ buster.testCase("Resource middleware", {
 
         "hits backend through proxy": function (done) {
             this.backend.onRequest = done(function (req, res) {
-                assert.equals(req.url, "/app");
+                assert.equals(req.url, "/");
             });
             h.req({ path: "/here/be/proxy/app" }).end();
         },
@@ -442,7 +442,7 @@ buster.testCase("Resource middleware", {
         "hits backend through proxy with context path": function (done) {
             this.resources.setContextPath("/oh/my");
             this.backend.onRequest = done(function (req, res) {
-                assert.equals(req.url, "/app");
+                assert.equals(req.url, "/");
             });
             h.req({ path: "/oh/my/here/be/proxy/app" }).end();
         }
@@ -459,7 +459,7 @@ buster.testCase("Resource middleware", {
 
         "hits backend through proxy": function (done) {
             this.backend.onRequest = done(function (req, res) {
-                assert.equals(req.url, "/elsewhere/app/stuff");
+                assert.equals(req.url, "/elsewhere/stuff");
             });
             h.req({ path: "/here/be/proxy/app/stuff" }).end();
         },
@@ -467,7 +467,7 @@ buster.testCase("Resource middleware", {
         "hits backend through proxy with context path": function (done) {
             this.resources.setContextPath("/oh/my");
             this.backend.onRequest = done(function (req, res) {
-                assert.equals(req.url, "/elsewhere/app");
+                assert.equals(req.url, "/elsewhere");
             });
             h.req({ path: "/oh/my/here/be/proxy/app" }).end();
         }

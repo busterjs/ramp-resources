@@ -249,6 +249,7 @@ buster.testCase("Resources", {
             var rs = resource.create("/api", { backend: "localhost/yep" });
 
             assert.equals(rs.content().path, "/yep");
+            assert.equals(rs.content().getProxyPath(), "/api");
         },
 
         "uses full URL": function () {
