@@ -23,7 +23,7 @@ function addResourcesAndInflate(cache, resourceSet, resources, done) {
 function maxSizeSetUp(done) {
     this.rs = resourceSet.create();
     this.rs2 = resourceSet.create();
-    this.cache = resourceSetCache.create(250, 150);
+    this.cache = resourceSetCache.create({ ttl: 250, maxSize: 150 });
 
     when.all([
         add(this.rs, "/buster.js", "Yo!", { etag: "abcd" }),
@@ -37,7 +37,7 @@ buster.testCase("Resource set cache", {
     setUp: function (done) {
         this.clock = this.useFakeTimers();
         this.rs = resourceSet.create();
-        this.cache = resourceSetCache.create(250);
+        this.cache = resourceSetCache.create({ ttl: 250 });
 
         var rs = resourceSet.create();
         when.all([
@@ -164,7 +164,7 @@ buster.testCase("Resource set cache", {
 
         "keeps resources indefinitely with -1 ttl": function (done) {
             var rs = resourceSet.create();
-            var cache = resourceSetCache.create(-1);
+            var cache = resourceSetCache.create({ ttl: -1 });
 
             add(rs, "/buster.js", "Yo!", { etag: "abcd" }).then(function () {
                 cache.inflate(rs).then(done(function () {
