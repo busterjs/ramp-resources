@@ -22,7 +22,7 @@
         "buster-core": ">= 0.5",
         "mime": "~1",
         "buster-glob": "~0.1",
-        "when": ">=0.10"
+        "when": "https://github.com/cujojs/when/tarball/v0.11.1"
     },
     "devDependencies": {
         "buster": "*"
