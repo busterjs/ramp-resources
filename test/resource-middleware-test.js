@@ -265,6 +265,13 @@ buster.testCase("Resource middleware", {
             })).end();
         },
 
+        "redirects to root resource": function (done) {
+            this.resources.mount("/buster/2.0/", this.sets.withSinon);
+            h.req({
+                path: "/buster/2.0"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 302);
+                assert.equals(res.headers.location, "/buster/2.0/");
             })).end();
         },
 
