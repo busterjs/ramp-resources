@@ -52,22 +52,29 @@ buster.testCase("Resource middleware", {
 
         tearDown: h.serverTearDown,
 
-        "arbitrary path responds with 404": function (done) {
+        "arbitrary is not handled": function (done) {
             h.req({ path: "/hey" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
-        "root responds with 404": function (done) {
+        "root is not handeled": function (done) {
             h.req({ path: "/" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
-        "requests for context path yields 404": function (done) {
+        "requests for context path is not handled": function (done) {
             this.resources.setContextPath("/ctx/1");
             h.req({ path: "/ctx/1" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
+            })).end();
+        },
+
+        "requests for context path with slash is not handled": function (done) {
+            this.resources.setContextPath("/ctx/1");
+            h.req({ path: "/ctx/1/" }, done(function (req, res) {
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
@@ -89,9 +96,9 @@ buster.testCase("Resource middleware", {
 
         tearDown: h.serverTearDown,
 
-        "arbitrary path responds with 404": function (done) {
+        "arbitrary path is not handled": function (done) {
             h.req({ path: "/arbitrary" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
@@ -254,7 +261,10 @@ buster.testCase("Resource middleware", {
             h.req({
                 path: "/buster/2.0/buster.js"
             }, done(function (req, res, body) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
+            })).end();
+        },
+
             })).end();
         },
 
@@ -273,7 +283,7 @@ buster.testCase("Resource middleware", {
             h.req({
                 path: "/sinon/buster.js"
             }, done(function (req, res, body) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
@@ -485,14 +495,14 @@ buster.testCase("Resource middleware", {
         "stops serving resource set at path": function (done) {
             this.resources.unmount("/buster");
             h.req({ path: "/buster/buster.js" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
         "ignores trailing slash when unmounting": function (done) {
             this.resources.unmount("/buster/");
             h.req({ path: "/buster/buster.js" }, done(function (req, res) {
-                assert.equals(res.statusCode, 404);
+                assert.equals(res.statusCode, 418);
             })).end();
         },
 
