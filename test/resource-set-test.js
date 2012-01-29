@@ -5,7 +5,7 @@ var when = require("when");
 require("./test-helper.js");
 var FIXTURE_DIR = __dirname + "/fixtures";
 var noop = function () {};
-var logStack = function (err) { buster.log(err.stack); };
+var logStack = function (err) { buster.log(err && err.stack || err.message); };
 
 buster.testCase("Resource sets", {
     setUp: function () {
@@ -204,6 +204,15 @@ buster.testCase("Resource sets", {
                 assert.equals(rs[0].path, "/bar.js");
                 assert.equals(rs[1].path, "/foo.js");
             }), done(logStack));
+        },
+
+        "adds resource from glob pattern and file path": function (done) {
+            this.rs.rootPath = FIXTURE_DIR + "/other-test";
+            var patterns = ["some-test.js", "*-test.js"];
+            this.rs.addResources(patterns).then(done(function (rs) {
+                assert.equals(this.rs.length, 1);
+                assert.equals(this.rs[0].path, "/some-test.js");
+            }.bind(this)), done(logStack));
         },
 
         "fails for missing file": function (done) {
@@ -846,6 +855,30 @@ buster.testCase("Resource sets", {
                 assert.equals(loadPath.paths(),
                               ["/buster.js", "/bar.js", "/foo.js"]);
             }.bind(this)), done);
+        }
+    },
+
+    "then": {
+        setUp: function () {
+            this.rs = resourceSet.create(FIXTURE_DIR);
+        },
+
+        "calls callback after pending operations": function (done) {
+            this.rs.addResource("foo.js");
+            this.rs.addResource("bar.js");
+
+            this.rs.then(done(function () {
+                assert.equals(this.rs.length, 2);
+            }.bind(this)), logStack(done));
+        },
+
+        "calls callback with resource set": function (done) {
+            this.rs.addResource("foo.js");
+            this.rs.addResource("bar.js");
+
+            this.rs.then(done(function (rs) {
+                assert.same(this.rs, rs);
+            }.bind(this)), logStack(done));
         }
     }
 });
