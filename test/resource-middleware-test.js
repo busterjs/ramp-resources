@@ -87,6 +87,15 @@ buster.testCase("Resource middleware", {
         }
     },
 
+    "mount": {
+        "fails if mounting nothing": function () {
+            var middleware = resourceMiddleWare.create();
+            assert.exception(function () {
+                middleware.mount("/", null);
+            });
+        }
+    },
+
     "resource set mounted": {
         setUp: function (done) {
             this.resources = resourceMiddleWare.create();
