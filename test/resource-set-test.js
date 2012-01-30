@@ -5,7 +5,9 @@ var when = require("when");
 require("./test-helper.js");
 var FIXTURE_DIR = __dirname + "/fixtures";
 var noop = function () {};
-var logStack = function (err) { buster.log(err && err.stack || err.message); };
+var logStack = function (err) {
+    buster.log((err && err.stack) || err.message);
+};
 
 buster.testCase("Resource sets", {
     setUp: function () {
@@ -298,6 +300,21 @@ buster.testCase("Resource sets", {
                 var concat = "var thisIsTheFoo = 5;var helloFromBar = 1;";
                 assert.content(resources[2], concat, done);
             }, done(logStack));
+        },
+
+        "processes concatenated combined content": function (done) {
+            this.rs.addResources([
+                "foo.js", { path: "/buster.js", combine: ["foo.js"] }
+            ]).then(function () {
+                var resource = this.rs.get("/buster.js");
+                resource.addProcessor(function (resource, content) {
+                    return "function () {" + content + "}";
+                });
+                this.rs.concat().then(done(function (rs) {
+                    var concat = "function () {var thisIsTheFoo = 5;}";
+                    assert.content(rs.get("/buster.js"), concat, done);
+                }), done(logStack));
+            }.bind(this), done(logStack));
         }
     },
 
