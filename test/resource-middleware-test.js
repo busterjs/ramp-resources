@@ -322,6 +322,12 @@ buster.testCase("Resource middleware", {
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "Hey");
             })).end();
+        },
+
+        "modifies script tags accordingly": function (done) {
+            h.req({ path: "/buster/2.0/" }, done(function (req, res, body) {
+                assert.match(body, "src=\"/buster/2.0/buster.js\"");
+            })).end();
         }
     },
 
