@@ -835,7 +835,7 @@ buster.testCase("Resource sets", {
             this.rs.addResource({ path: "/foo.js", content: "Yeah" });
             this.rs.addResource({ path: "/bar.js", content: "Hmm" });
             this.rs.prependLoad(["foo.js", "bar.js"]).then(done(function (lp) {
-                assert.equals(lp.paths(), ["/bar.js", "/foo.js"]);
+                assert.equals(lp.paths(), ["/foo.js", "/bar.js"]);
             }), done);
         },
 
@@ -843,7 +843,7 @@ buster.testCase("Resource sets", {
             this.rs.addResource({ path: "/tmp/foo.js", content: "Yeah" });
             this.rs.addResource({ path: "/tmp/bar.js", content: "Hmm" });
             this.rs.prependLoad(["/tmp/*.js"]).then(done(function (loadPath) {
-                assert.equals(loadPath.paths(), ["/tmp/bar.js", "/tmp/foo.js"]);
+                assert.equals(loadPath.paths(), ["/tmp/foo.js", "/tmp/bar.js"]);
             }), done);
         },
 
@@ -859,7 +859,7 @@ buster.testCase("Resource sets", {
             var rs = this.rs;
             rs.prependLoad("*.js").then(function (lp) {
                 var cb = buster.countdown(2, done);
-                assert.equals(lp.paths(), ["/buster.js", "/foo.js", "/bar.js"]);
+                assert.equals(lp.paths(), ["/bar.js", "/foo.js", "/buster.js"]);
                 assert.content(rs.get("/bar.js"), "var helloFromBar = 1;", cb);
                 assert.content(rs.get("/foo.js"), "var thisIsTheFoo = 5;", cb);
             }, done);
@@ -870,7 +870,7 @@ buster.testCase("Resource sets", {
             var paths = ["foo.js", " bar.js", "*.js"];
             this.rs.prependLoad(paths).then(done(function (loadPath) {
                 assert.equals(loadPath.paths(),
-                              ["/buster.js", "/bar.js", "/foo.js"]);
+                              ["/bar.js", "/buster.js", "/foo.js"]);
             }.bind(this)), done);
         }
     },
