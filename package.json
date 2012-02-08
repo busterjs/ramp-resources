@@ -1,7 +1,7 @@
 {
     "name": "buster-resources",
     "version": "0.2.0",
-    "description": "",
+    "description": "Virtual file systems for exposing files and other resources on e.g. web servers",
     "homepage": "http://busterjs.org/buster-resources",
     "author": { "name": "August Lilleaas and Christian Johansen" },
     "contributors": [{
@@ -19,9 +19,9 @@
         "url": "git://gitorious.org/buster/buster-resources.git"
     },
     "dependencies": {
-        "buster-core": ">= 0.5",
+        "buster-core": ">=0.5.1",
         "mime": "~1",
-        "buster-glob": "~0.2",
+        "buster-glob": ">=0.2",
         "when": "https://github.com/cujojs/when/tarball/v0.11.1"
     },
     "devDependencies": {
