@@ -78,7 +78,8 @@ buster.testCase("Load path", {
             this.rs.loadPath.append("/baz.js");
             this.rs.loadPath.prepend(["/foo.js", "/bar.js"]);
 
-            assert.equals(this.rs.loadPath.paths(), ["/foo.js", "/bar.js", "/baz.js"]);
+            assert.equals(this.rs.loadPath.paths(),
+                          ["/foo.js", "/bar.js", "/baz.js"]);
         },
 
         "adds resources in reverse order": function () {

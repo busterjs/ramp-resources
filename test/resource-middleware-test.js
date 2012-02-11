@@ -332,7 +332,9 @@ buster.testCase("Resource middleware", {
 
         "modifies script tags with context path": function (done) {
             this.resources.setContextPath("/a/b/c");
-            h.req({ path: "/a/b/c/buster/2.0/" }, done(function (req, res, body) {
+            h.req({
+                path: "/a/b/c/buster/2.0/"
+            }, done(function (req, res, body) {
                 assert.match(body, "src=\"/a/b/c/buster/2.0/buster.js\"");
             })).end();
         }
