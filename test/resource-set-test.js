@@ -319,19 +319,16 @@ buster.testCase("Resource sets", {
     },
 
     "process": {
-        "processes all resources": function (done) {
-            var resources = [resource.create("/a.txt", { content: "a" }),
-                             resource.create("/b.txt", { content: "b" })];
+        setUp: function () {
+            this.resources = [
+                resource.create("/a.txt", { content: "a", etag: "1234" }),
+                resource.create("/b.txt", { content: "b", etag: "2345" })
+            ];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
-            this.stub(resources[0], "process").returns(deferred.promise);
-            this.stub(resources[1], "process").returns(deferred.promise);
-            this.rs.addResources(resources);
-
-            this.rs.process().then(done(function () {
-                assert.calledOnce(resources[0].process);
-                assert.calledOnce(resources[1].process);
-            }));
+            this.stub(this.resources[0], "process").returns(deferred.promise);
+            this.stub(this.resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(this.resources);
         },
 
         "processes all resources": function (done) {
@@ -349,8 +346,91 @@ buster.testCase("Resource sets", {
             }));
         },
 
-        "// skips resources in cache manifest": function () {
-            
+        "processes all resources": function (done) {
+            var resources = [resource.create("/a.txt", { content: "a" }),
+                             resource.create("/b.txt", { content: "b" })];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process().then(done(function () {
+                assert.calledOnce(resources[0].process);
+                assert.calledOnce(resources[1].process);
+            }));
+        },
+
+        "skips resources in cache manifest": function (done) {
+            var resources = [
+                resource.create("/a.txt", { content: "a", etag: "1234" }),
+                resource.create("/b.txt", { content: "b", etag: "2345" })
+            ];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process({ "/a.txt": ["1234"] }).then(done(function () {
+                refute.called(resources[0].process);
+                assert.calledOnce(resources[1].process);
+            }));
+        },
+
+        "requires cache manifest etag match": function (done) {
+            var resources = [
+                resource.create("/a.txt", { content: "a", etag: "1234" }),
+                resource.create("/b.txt", { content: "b", etag: "2345" })
+            ];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process({ "/a.txt": ["abcd"] }).then(done(function () {
+                assert.calledOnce(resources[0].process);
+                assert.calledOnce(resources[1].process);
+            }));
+        },
+
+        "matches any cached version in manifest": function (done) {
+            var resources = [
+                resource.create("/a.txt", { content: "a", etag: "1234" }),
+                resource.create("/b.txt", { content: "b", etag: "2345" })
+            ];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process({
+                "/a.txt": ["abcd", "2341", "1234"]
+            }).then(done(function () {
+                refute.called(resources[0].process);
+                assert.calledOnce(resources[1].process);
+            }));
+        },
+
+        "resolves with cache manifest": function (done) {
+            var resources = [
+                resource.create("/a.txt", { content: "a", etag: "1234" }),
+                resource.create("/b.txt", { content: "b", etag: "2345" })
+            ];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process().then(done(function (manifest) {
+                assert.equals(manifest, {
+                    "/a.txt": ["1234"],
+                    "/b.txt": ["2345"]
+                });
+            }));
         }
     },
 
