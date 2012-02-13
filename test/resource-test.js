@@ -366,6 +366,26 @@ buster.testCase("Resources", {
             });
 
             assert.content(rs, "42!!??", done);
+        },
+
+        "leaves content untouched if returns undefined": function (done) {
+            var rs = resource.create("/path", {
+                content: function () { return "42"; }
+            });
+
+            rs.addProcessor(function (resource, content) {});
+
+            assert.content(rs, "42", done);
+        },
+
+        "blanks content by returning blank string": function (done) {
+            var rs = resource.create("/path", {
+                content: function () { return "42"; }
+            });
+
+            rs.addProcessor(function (resource, content) { return ""; });
+
+            assert.content(rs, "", done);
         }
     },
 
