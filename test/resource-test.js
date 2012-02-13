@@ -369,6 +369,44 @@ buster.testCase("Resources", {
         }
     },
 
+    "process": {
+        setUp: function () {
+            this.content = this.stub().returns("Something");
+            this.rs = resource.create("/path", { content: this.content });
+        },
+
+        "does not resolve content if no processors": function (done) {
+            this.rs.process().then(done(function () {
+                refute.called(this.content);
+            }.bind(this)));
+        },
+
+        "resolves and processes content with one processor": function (done) {
+            var processor = this.stub().returns("");
+            this.rs.addProcessor(processor);
+
+            this.rs.process().then(done(function () {
+                assert.calledOnce(this.content);
+                assert.calledOnceWith(processor, this.rs, "Something");
+            }.bind(this)));
+        },
+
+        "yields null when not processing": function (done) {
+            this.rs.process().then(done(function (content) {
+                assert.isNull(content);
+            }.bind(this)));
+        },
+
+        "yields processed content": function (done) {
+            var processor = this.stub().returns("\m/");
+            this.rs.addProcessor(processor);
+
+            this.rs.process().then(done(function (content) {
+                assert.equals(content, "\m/");
+            }.bind(this)));
+        }
+    },
+
     "serialize": {
         "fails if content rejects": function (done) {
             var d = when.defer();

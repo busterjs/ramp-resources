@@ -318,6 +318,42 @@ buster.testCase("Resource sets", {
         }
     },
 
+    "process": {
+        "processes all resources": function (done) {
+            var resources = [resource.create("/a.txt", { content: "a" }),
+                             resource.create("/b.txt", { content: "b" })];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process().then(done(function () {
+                assert.calledOnce(resources[0].process);
+                assert.calledOnce(resources[1].process);
+            }));
+        },
+
+        "processes all resources": function (done) {
+            var resources = [resource.create("/a.txt", { content: "a" }),
+                             resource.create("/b.txt", { content: "b" })];
+            var deferred = when.defer();
+            deferred.resolver.resolve(null);
+            this.stub(resources[0], "process").returns(deferred.promise);
+            this.stub(resources[1], "process").returns(deferred.promise);
+            this.rs.addResources(resources);
+
+            this.rs.process().then(done(function () {
+                assert.calledOnce(resources[0].process);
+                assert.calledOnce(resources[1].process);
+            }));
+        },
+
+        "// skips resources in cache manifest": function () {
+            
+        }
+    },
+
     "remove": {
         "makes resource go away": function (done) {
             var resource = { path: "/yo", content: "Ok" };
