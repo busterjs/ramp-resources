@@ -901,7 +901,7 @@ buster.testCase("Resource sets", {
             this.rs.addResource({ path: "/tmp/bar.js", content: "Hmm" });
             this.rs.appendLoad(["/tmp/*.js"]).then(done(function (loadPath) {
                 assert.equals(loadPath.paths(), ["/tmp/foo.js", "/tmp/bar.js"]);
-            }), done);
+            }), done(logStack));
         },
 
         "adds non-existing resource": function (done) {
@@ -960,7 +960,7 @@ buster.testCase("Resource sets", {
             this.rs.addResource({ path: "/tmp/bar.js", content: "Hmm" });
             this.rs.prependLoad(["/tmp/*.js"]).then(done(function (loadPath) {
                 assert.equals(loadPath.paths(), ["/tmp/foo.js", "/tmp/bar.js"]);
-            }), done);
+            }), done(logStack));
         },
 
         "adds non-existing resource": function (done) {

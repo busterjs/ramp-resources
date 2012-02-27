@@ -427,6 +427,31 @@ buster.testCase("Resources", {
         }
     },
 
+    "enclose": {
+        "wraps content in an iife": function (done) {
+            var rs = resource.create("/path", {
+                content: this.stub().returns("var a = 42;"),
+                enclose: true
+            });
+
+            rs.content().then(done(function (content) {
+                assert.equals(content, "(function () {var a = 42;}());");
+            }.bind(this)));
+        },
+
+        "adds exports to iife": function (done) {
+            var rs = resource.create("/path", {
+                content: this.stub().returns("var a = 42;"),
+                enclose: true,
+                exports: ["a"]
+            });
+
+            rs.content().then(done(function (content) {
+                assert.equals(content, "(function (__GLOBAL) {var a = 42;__GLOBAL.a=a;}(typeof global != \"undefined\" ? global : this));");
+            }.bind(this)));
+        }
+    },
+
     "serialize": {
         "fails if content rejects": function (done) {
             var d = when.defer();
