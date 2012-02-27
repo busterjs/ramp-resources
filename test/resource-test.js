@@ -475,6 +475,29 @@ buster.testCase("Resources", {
                 assert.defined(err);
                 assert.match(err, "MEH");
             }));
+        },
+
+        "includes enclose property if true": function (done) {
+            var res = resource.create("/meh", {
+                content: "Hey",
+                enclose: true
+            });
+
+            res.serialize().then(done(function (serialized) {
+                assert.isTrue(serialized.enclose);
+            }));
+        },
+
+        "includes exports if set": function (done) {
+            var res = resource.create("/meh", {
+                content: "Hey",
+                enclose: true,
+                exports: ["a", "b"]
+            });
+
+            res.serialize().then(done(function (serialized) {
+                assert.equals(serialized.exports, ["a", "b"]);
+            }));
         }
     }
 });
