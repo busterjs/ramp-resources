@@ -435,7 +435,7 @@ buster.testCase("Resources", {
             });
 
             rs.content().then(done(function (content) {
-                assert.equals(content, "(function () {var a = 42;}());");
+                assert.equals(content, "(function () {var a = 42;}.call(this));");
             }.bind(this)));
         },
 
@@ -447,7 +447,7 @@ buster.testCase("Resources", {
             });
 
             rs.content().then(done(function (content) {
-                assert.equals(content, "(function (__GLOBAL) {var a = 42;__GLOBAL.a=a;}(typeof global != \"undefined\" ? global : this));");
+                assert.equals(content, "(function (global) {var a = 42;global.a=a;}.call(this, typeof global != \"undefined\" ? global : this));");
             }.bind(this)));
         }
     },
