@@ -6,7 +6,8 @@ require("./test-helper.js");
 var FIXTURE_DIR = __dirname + "/fixtures";
 var noop = function () {};
 var logStack = function (err) {
-    buster.log((err && err.stack) || err.message);
+    var message = (err && err.stack) || err.message;
+    if (message) { buster.log(message); }
 };
 
 buster.testCase("Resource sets", {
@@ -208,6 +209,30 @@ buster.testCase("Resource sets", {
             }), done(logStack));
         },
 
+        "uses strict globbing": function (done) {
+            this.rs.addResource("zyng.js").then(done(function () {
+                assert(false, "Should produce error");
+            }), done(function (err) {
+                assert.match(err.message, "zyng.js");
+            }));
+        },
+
+        "uses strict globbing with multiple patterns": function (done) {
+            this.rs.addResources(["zyng.js"]).then(done(function () {
+                assert(false, "Should produce error");
+            }), done(function (err) {
+                assert.match(err.message, "zyng.js");
+            }));
+        },
+
+        "uses strict globbing to catch any non-matching pattern": function (done) {
+            this.rs.addResources(["foo.js", "zyng/*.js"]).then(done(function () {
+                assert(false, "Should produce error");
+            }), done(function (err) {
+                assert.match(err.message, "zyng/*.js");
+            }));
+        },
+
         "adds resource from glob pattern and file path": function (done) {
             this.rs.rootPath = FIXTURE_DIR + "/other-test";
             var patterns = ["some-test.js", "*-test.js"];
@@ -220,7 +245,7 @@ buster.testCase("Resource sets", {
         "fails for missing file": function (done) {
             this.rs.addResource("oops.js").then(noop, done(function (err) {
                 assert.defined(err);
-                assert.match(err.message, "oops.js matched no files");
+                assert.match(err.message, "'oops.js' matched no files");
             }));
         },
 
@@ -924,10 +949,24 @@ buster.testCase("Resource sets", {
 
         "does not add duplicate entries": function (done) {
             this.rs.addResource({ path: "/foo.js", content: "Ok" });
-            var paths = ["foo.js", " bar.js", "*.js"];
+            var paths = ["foo.js", "bar.js", "*.js"];
             this.rs.appendLoad(paths).then(done(function (lp) {
                 assert.equals(lp.paths(), ["/foo.js", "/bar.js", "/buster.js"]);
             }.bind(this)), done);
+        },
+
+        "fails for non-existent resource": function (done) {
+            var paths = ["*.js", "*.txt"];
+            this.rs.appendLoad(paths).then(done, done(function (err) {
+                assert.match(err.message, "*.txt matched no files or resources");
+            }));
+        },
+
+        "fails for non-existent resource with leading slash": function (done) {
+            var paths = ["/*.js", "/*.txt"];
+            this.rs.appendLoad(paths).then(done, done(function (err) {
+                assert.match(err.message, "/*.txt matched no files or resources");
+            }));
         }
     },
 
@@ -983,11 +1022,25 @@ buster.testCase("Resource sets", {
 
         "does not add duplicate entries": function (done) {
             this.rs.addResource({ path: "/foo.js", content: "Ok" });
-            var paths = ["foo.js", " bar.js", "*.js"];
+            var paths = ["foo.js", "bar.js", "*.js"];
             this.rs.prependLoad(paths).then(done(function (loadPath) {
                 assert.equals(loadPath.paths(),
                               ["/bar.js", "/buster.js", "/foo.js"]);
             }.bind(this)), done);
+        },
+
+        "fails for non-existent resource": function (done) {
+            var paths = ["*.js", "*.txt"];
+            this.rs.prependLoad(paths).then(done, done(function (err) {
+                assert.match(err.message, "*.txt matched no files or resources");
+            }));
+        },
+
+        "fails for non-existent resource with leading slash": function (done) {
+            var paths = ["/*.js", "/*.txt"];
+            this.rs.prependLoad(paths).then(done, done(function (err) {
+                assert.match(err.message, "/*.txt matched no files or resources");
+            }));
         }
     },
 
