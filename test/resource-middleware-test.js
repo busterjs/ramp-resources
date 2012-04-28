@@ -2,6 +2,7 @@ var buster = require("buster");
 var resourceSet = require("../lib/resource-set");
 var resourceMiddleWare = require("../lib/resource-middleware");
 var when = require("when");
+var Path = require("path");
 var h = require("./test-helper");
 
 function createResourceSets() {
@@ -181,7 +182,7 @@ buster.testCase("Resource middleware", {
 
             h.req({ path: "/dabomb" }, done(function (req, res, body) {
                 assert.equals(res.statusCode, 500);
-                assert.match(body, "test/resource-middleware-test");
+                assert.match(body, Path.join("test", "resource-middleware-test"));
                 assert.match(body, "Damnit");
             })).end();
         },
