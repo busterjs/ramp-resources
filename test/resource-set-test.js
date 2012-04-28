@@ -1,9 +1,10 @@
 var buster = require("buster");
 var resource = require("../lib/resource");
 var resourceSet = require("../lib/resource-set");
+var Path = require("path");
 var when = require("when");
 require("./test-helper.js");
-var FIXTURE_DIR = __dirname + "/fixtures";
+var FIXTURE_DIR = Path.join(__dirname, "fixtures");
 var noop = function () {};
 var logStack = function (err) {
     var message = (err && err.stack) || err.message;
