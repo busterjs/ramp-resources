@@ -235,7 +235,7 @@ buster.testCase("Resource sets", {
         },
 
         "adds resource from glob pattern and file path": function (done) {
-            this.rs.rootPath = FIXTURE_DIR + "/other-test";
+            this.rs.rootPath = Path.join(FIXTURE_DIR, "other-test");
             var patterns = ["some-test.js", "*-test.js"];
             this.rs.addResources(patterns).then(done(function (rs) {
                 assert.equals(this.rs.length, 1);
@@ -253,7 +253,7 @@ buster.testCase("Resource sets", {
         "fails for file outside root path": function (done) {
             var verify = function (err) {
                 assert.defined(err);
-                assert.match(err, "../resource-test.js");
+                assert.match(err, Path.join("..", "resource-test.js"));
                 assert.match(err, "outside the project root");
                 assert.match(err, "set rootPath to the desired root");
             };
