@@ -91,7 +91,14 @@ buster.testCase("Resource sets", {
             refute.exception(function () {
                 this.rs.addResource({ path: "/path", etag: "abcd" });
             }.bind(this));
-        }
+        },
+
+        "is gettable with URL path when added as system path": function (done) {
+            var path = Path.join("test", "my-testish.js");
+            this.rs.addFileResource(path).then(done(function (resource) {
+                assert.equals(resource.path, "/test/my-testish.js");
+            }));
+        },
     },
 
     "adding processor": {
