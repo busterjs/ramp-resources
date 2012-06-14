@@ -15,16 +15,16 @@ buster.testCase("Processors", {
             this.resource.addProcessor(iife());
 
             assert.content(this.resource,
-                           "(function () {var buster = {};}());", done);
+                           "(function () {var buster = {};}.call(this));", done);
         },
 
         "exports single variable by assigning to global": function (done) {
             this.resource.addProcessor(iife(["buster"]));
 
             assert.content(this.resource,
-                           "(function (__GLOBAL) {var buster = {};" +
-                           "__GLOBAL.buster=buster;}" +
-                           "(typeof global != \"undefined\" ? global : this));",
+                           "(function (global) {var buster = {};" +
+                           "global.buster=buster;}.call(this, " +
+                           "typeof global != \"undefined\" ? global : this));",
                            done);
         },
 
@@ -32,10 +32,10 @@ buster.testCase("Processors", {
             this.resource.addProcessor(iife(["buster", "sinon"]));
 
             assert.content(this.resource,
-                           "(function (__GLOBAL) {var buster = {};" +
-                           "__GLOBAL.buster=buster;" +
-                           "__GLOBAL.sinon=sinon;}" +
-                           "(typeof global != \"undefined\" ? global : this));",
+                           "(function (global) {var buster = {};" +
+                           "global.buster=buster;" +
+                           "global.sinon=sinon;}.call(this, " +
+                           "typeof global != \"undefined\" ? global : this));",
                            done);
         },
 
@@ -46,9 +46,9 @@ buster.testCase("Processors", {
             this.resource.addProcessor(iife(["buster"]));
 
             assert.content(this.resource,
-                           "(function (__GLOBAL) {var buster = {};" +
-                           "__GLOBAL.buster=buster;}" +
-                           "(typeof global != \"undefined\" ? global : this));",
+                           "(function (global) {var buster = {};" +
+                           "global.buster=buster;}.call(this, " +
+                           "typeof global != \"undefined\" ? global : this));",
                            done);
         }
     }
