@@ -966,14 +966,14 @@ buster.testCase("Resource sets", {
         "fails for non-existent resource": function (done) {
             var paths = ["*.js", "*.txt"];
             this.rs.appendLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "*.txt matched no files or resources");
+                assert.match(err.message, "'*.txt' matched no files or resources");
             }));
         },
 
         "fails for non-existent resource with leading slash": function (done) {
             var paths = ["/*.js", "/*.txt"];
             this.rs.appendLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "/*.txt matched no files or resources");
+                assert.match(err.message, "'/*.txt' matched no files or resources");
             }));
         }
     },
@@ -1040,14 +1040,14 @@ buster.testCase("Resource sets", {
         "fails for non-existent resource": function (done) {
             var paths = ["*.js", "*.txt"];
             this.rs.prependLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "*.txt matched no files or resources");
+                assert.match(err.message, "'*.txt' matched no files or resources");
             }));
         },
 
         "fails for non-existent resource with leading slash": function (done) {
             var paths = ["/*.js", "/*.txt"];
             this.rs.prependLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "/*.txt matched no files or resources");
+                assert.match(err.message, "'/*.txt' matched no files or resources");
             }));
         }
     },
