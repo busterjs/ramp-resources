@@ -151,6 +151,20 @@ buster.testCase("Resource middleware", {
             })).end();
         },
 
+        "serves root resource with custom scripts location": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/",
+                content: "<html>foo{{scripts}}bar</html>"
+            });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                refute.match(body, "{{scripts}}")
+                assert.match(body, "<html>foo<script");
+                assert.match(body, "src=\"/buster.js\"");
+                assert.match(body, "</script>bar</html>");
+            })).end();
+        },
+
         "serves matching resource": function (done) {
             h.req({ path: "/buster.js" }, done(function (req, res, body) {
                 assert.equals(res.statusCode, 200);
