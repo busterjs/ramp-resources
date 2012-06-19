@@ -410,6 +410,39 @@ buster.testCase("Resources", {
             }), done(function (err) {
                 assert.match(err.message, "Process fail");
             }));
+        },
+
+        "creates etag hash": function () {
+            var rs = resource.create("/path", {
+                content: "Hey"
+            });
+
+            rs.addProcessor(function () {});
+
+            assert.equals(rs.etag, "e4575dc296fb6f90f3d605701361e143b2ac55b9");
+        },
+
+        "updates existing etag": function () {
+            var rs = resource.create("/path", {
+                etag: "123",
+                content: "Hey"
+            });
+
+            rs.addProcessor(function () {});
+
+            assert.equals(rs.etag, "5f46fdd28899bea84ebb9af2a1d0ffa32c0cca05");
+        },
+
+        "always update existing etag": function () {
+            var rs = resource.create("/path", {
+                etag: "123",
+                content: "Hey"
+            });
+
+            rs.addProcessor(function () {});
+            rs.addProcessor(function () { return "OK"; });
+
+            assert.equals(rs.etag, "4b0b20e81e9db06b84fc7589e22507eb3d3db04c");
         }
     },
 
