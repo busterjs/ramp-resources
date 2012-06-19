@@ -530,6 +530,19 @@ buster.testCase("Resources", {
             res.serialize().then(done(function (serialized) {
                 assert.equals(serialized.exports, ["a", "b"]);
             }));
+        },
+
+        "fails if content processor throws": function (done) {
+            var res = resource.create("/meh", {
+                content: function () { return "Content"; }
+            });
+
+            res.addProcessor(function () { throw new Error("Meh"); });
+
+            res.serialize().then(function () {}, done(function (err) {
+                assert.defined(err);
+                assert.match(err, "Meh");
+            }));
         }
     }
 });
