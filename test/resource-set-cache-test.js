@@ -95,6 +95,19 @@ buster.testCase("Resource set cache", {
             });
         },
 
+        "does not cache uncacheable resource": function (done) {
+            var rs2 = resourceSet.create();
+            addResourcesAndInflate(this.cache, this.rs, [
+                ["/uncacheable.js", "Stuff", { cacheable: false, etag: "1" }]
+            ], function () {
+                addResourcesAndInflate(this.cache, rs2, [
+                    ["/uncacheable.js", "", { etag: "1" }]
+                ], function (rs) {
+                    assert.content(rs.get("/uncacheable.js"), "", done);
+                });
+            }.bind(this));
+        },
+
         "does not cache resources when content() rejects": function (done) {
             var rs2 = resourceSet.create();
             var d = when.defer();

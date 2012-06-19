@@ -559,7 +559,8 @@ buster.testCase("Resource sets", {
                         resources: [{
                             encoding: "utf-8",
                             path: "/buster.js",
-                            content: "var a = 42;"
+                            content: "var a = 42;",
+                            cacheable: true
                         }]
                     });
                 }));
@@ -583,7 +584,8 @@ buster.testCase("Resource sets", {
                             path: "/buster.js",
                             content: "var a = 42;",
                             etag: "1234abcd",
-                            headers: { "X-Buster": "Aww yeah" }
+                            headers: { "X-Buster": "Aww yeah" },
+                            cacheable: true
                         }]
                     });
                 }));
@@ -633,7 +635,8 @@ buster.testCase("Resource sets", {
                 assert.equals(serialized.resources[2], {
                     encoding: "utf-8",
                     path: "/bundle.js",
-                    combine: ["/buster.js", "/sinon.js"]
+                    combine: ["/buster.js", "/sinon.js"],
+                    cacheable: true
                 });
             }));
         },
@@ -796,6 +799,21 @@ buster.testCase("Resource sets", {
             }] }).then(function () {}, done(function (err) {
                 assert.defined(err);
                 assert.match(err, "No content");
+            }));
+        },
+
+        "deserializes cacheable flag": function (done) {
+            resourceSet.deserialize({ resources: [{
+                path: "/buster.js",
+                content: "Hey mister",
+                cacheable: false
+            }, {
+                path: "/sinon.js",
+                content: "Yo",
+                cacheable: true
+            }] }).then(done(function (rs) {
+                assert.isFalse(rs.get("/buster.js").cacheable);
+                assert.isTrue(rs.get("/sinon.js").cacheable);
             }));
         }
     },

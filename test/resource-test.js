@@ -44,6 +44,23 @@ buster.testCase("Resources", {
             });
 
             assert.defined(rs);
+        },
+
+        "creates cacheable resources by default": function () {
+            var rs = resource.create("/path", {
+                content: "Something"
+            });
+
+            assert(rs.cacheable);
+        },
+
+        "creates uncacheable resource": function () {
+            var rs = resource.create("/path", {
+                content: "Something",
+                cacheable: false
+            });
+
+            assert.isFalse(rs.cacheable);
         }
     },
 
@@ -576,6 +593,16 @@ buster.testCase("Resources", {
                 assert.defined(err);
                 assert.match(err, "Meh");
             }));
+        },
+
+        "includes cacheable flag": function (done) {
+            var res = resource.create("/meh", {
+                content: function () { return "Content"; }
+            });
+
+            res.serialize().then(done(function (serialized) {
+                assert(serialized.cacheable);
+            }), function () {});
         }
     }
 });
