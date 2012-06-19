@@ -95,6 +95,19 @@ buster.testCase("Resource set cache", {
             });
         },
 
+        "does not cache identical versions multiple times": function (done) {
+            addResourcesAndInflate(this.cache, this.rs, [
+                ["/sinon.js", "Huh", { etag: "123" }]
+            ], function (rs) {
+                var cacheSize = this.cache.size();
+                addResourcesAndInflate(this.cache, this.rs, [
+                    ["/sinon.js", "Huh", { etag: "123" }]
+                ], done(function (rs) {
+                    assert.equals(cacheSize, this.cache.size());
+                }.bind(this)));
+            }.bind(this));
+        },
+
         "does not cache uncacheable resource": function (done) {
             var rs2 = resourceSet.create();
             addResourcesAndInflate(this.cache, this.rs, [
