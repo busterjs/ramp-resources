@@ -386,6 +386,30 @@ buster.testCase("Resources", {
             rs.addProcessor(function (resource, content) { return ""; });
 
             assert.content(rs, "", done);
+        },
+
+        "rejects if string content processor throws": function (done) {
+            var rs = resource.create("/path", { content: "Hey" });
+            rs.addProcessor(function () { throw new Error("Process fail"); });
+
+            rs.content().then(done(function () {
+                buster.assertions.fail("Expected to fail");
+            }), done(function (err) {
+                assert.match(err.message, "Process fail");
+            }));
+        },
+
+        "rejects if function content processor throws": function (done) {
+            var rs = resource.create("/path", {
+                content: this.stub().returns("Hey")
+            });
+            rs.addProcessor(function () { throw new Error("Process fail"); });
+
+            rs.content().then(done(function () {
+                buster.assertions.fail("Expected to fail");
+            }), done(function (err) {
+                assert.match(err.message, "Process fail");
+            }));
         }
     },
 
@@ -424,6 +448,14 @@ buster.testCase("Resources", {
             this.rs.process().then(done(function (content) {
                 assert.equals(content, "\m/");
             }.bind(this)));
+        },
+
+        "fails if processor throws": function (done) {
+            this.rs.addProcessor(this.stub().throws());
+
+            this.rs.process().then(function () {}, done(function (err) {
+                assert.defined(err);
+            }));
         }
     },
 
