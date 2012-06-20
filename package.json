@@ -1,8 +1,8 @@
 {
-    "name": "buster-resources",
-    "version": "0.3.1",
+    "name": "ramp-resources",
+    "version": "0.1.0",
     "description": "Virtual file systems for exposing files and other resources on e.g. web servers",
-    "homepage": "http://busterjs.org/buster-resources",
+    "homepage": "http://busterjs.org/docs/resources",
     "author": { "name": "August Lilleaas and Christian Johansen" },
     "contributors": [{
         "name": "August Lilleaas",
@@ -13,10 +13,10 @@
         "email": "christian@cjohansen.no",
         "url": "http://cjohansen.no"
     }],
-    "main": "./lib/buster-resources",
+    "main": "./lib/ramp-resources",
     "repository": {
         "type": "git",
-        "url": "git://gitorious.org/buster/buster-resources.git"
+        "url": "https://github.com/busterjs/ramp-resources.git"
     },
     "scripts": {
         "test": "./node_modules/buster/bin/buster-test"

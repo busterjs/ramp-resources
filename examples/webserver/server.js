@@ -3,7 +3,7 @@
  * the resource set middleware and cache (for optimal performance).
  */
 var http = require("http");
-var rs = require("../../lib/buster-resources");
+var rs = require("../../lib/ramp-resources");
 var HOUR = 1000 * 60 * 60;
 var MB = 1024;
 
@@ -41,7 +41,7 @@ function getJsonBody(req, callback) {
 
 function serveIndex(req, res) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.write("<h1>buster-resources webserver demo</h1>");
+    res.write("<h1>ramp-resources webserver demo</h1>");
     res.write("<h2>Here are my resource sets:</h2>");
     res.write("<ul>");
     middleware.mountPoints().forEach(function (mp) {

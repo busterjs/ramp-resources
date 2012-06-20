@@ -1,7 +1,7 @@
-*buster-resources* backed web server
+*ramp-resources* backed web server
 ------------------------------------
 
-This examples shows how you can use buster-resources to build a simple web
+This examples shows how you can use ramp-resources to build a simple web
 server that serves files, inlined resources and other things.
 
 To run the sample app, first start the server:
@@ -34,7 +34,7 @@ Now let's publish another, slightly larger resource set:
     node publish.js medium.json /medium
 
 This set contains several files of various kinds, illustrating how
-buster-resources is capable of handling binary as well as text files, assigning
+ramp-resources is capable of handling binary as well as text files, assigning
 sensible default mime types and more. Browse the resource set at
 <a href="http://localhost:8090/resources/medium/">http://localhost:8090/resources/medium/</a>.
 
@@ -44,9 +44,9 @@ To observe the caching behavior, try publishing one of the resource sets again:
 
 You'll note that it reports publishing far fewer bytes than the first time. The
 reason is that since none of the resources changed since we last pushed them to
-the server, they are not actually transferred over. In fact, buster-resources
+the server, they are not actually transferred over. In fact, ramp-resources
 goes to great lengths to not even read the files from disk. In their place,
-buster-resources uses the cache identifier to refer to one of the cached
+ramp-resources uses the cache identifier to refer to one of the cached
 resources on the server.
 
 Note that the caching behavior is completely optional on both the client and

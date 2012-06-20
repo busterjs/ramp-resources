@@ -2,12 +2,12 @@
  * A simple client that reads a JSON file specifying a resource set, serializes
  * it and posts it to a server along with a mount point to have it served.
  * Resource sets are serialized using a cache manifest produced by the server.
- * This manifest helps buster-resources not read things from disk if they are
+ * This manifest helps ramp-resources not read things from disk if they are
  * already in an updated version on the server.
  */
 var http = require("http");
 var fs = require("fs");
-var rs = require("../../lib/buster-resources");
+var rs = require("../../lib/ramp-resources");
 var B = require("buster-core");
 
 if (process.argv.length < 3) {
