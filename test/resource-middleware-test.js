@@ -559,6 +559,17 @@ buster.testCase("Resource middleware", {
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "Hey");
             })).end();
+        },
+
+        "with no argument unmounts everything": function (done) {
+            this.resources.mount("/sinon", this.sets.withSinon);
+            this.resources.unmount();
+            h.req({ path: "/sinon/sinon.js" }, function (req, res, body) {
+                assert.equals(res.statusCode, 418);
+                h.req({ path: "/buster/buster.js" }, done(function (req, res, body) {
+                    assert.equals(res.statusCode, 418);
+                })).end();
+            }).end();
         }
     },
 
