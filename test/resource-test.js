@@ -244,6 +244,12 @@ buster.testCase("Resources", {
             assert.isFunction(rs.content().respond);
         },
 
+        "content is always same proxy instance": function () {
+            var rs = resource.create("/api", { backend: "localhost" });
+
+            assert.same(rs.content(), rs.content());
+        },
+
         "defaults port to 80": function () {
             var rs = resource.create("/api", { backend: "localhost" });
 
