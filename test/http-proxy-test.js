@@ -134,6 +134,41 @@ buster.testCase("HTTP proxy", {
         }
     },
 
+    "close": {
+        "closes pending request": function (done) {
+            h.req({}, done(function (req, res) {
+                assert.equals(res.statusCode, 503);
+            })).end();
+
+            this.backend.onRequest = function (req, res) {
+                this.proxyMiddleware.close();
+            }.bind(this);
+        },
+
+        "does not close finished requests": function (done) {
+            var calls = 0;
+
+            h.req({}, function (req, res) {
+                assert.equals(res.statusCode, 200);
+
+                h.req({}, done(function (req, res) {
+                    assert.equals(res.statusCode, 503);
+                })).end();
+            }).end();
+
+            this.backend.onRequest = function (req, res) {
+                if (calls === 0) {
+                    res.end("OK");
+                } else {
+                    refute.exception(function () {
+                        this.proxyMiddleware.close();
+                    }.bind(this));
+                }
+                calls++;
+            }.bind(this);
+        }
+    },
+
     "backend context path": {
         setUp: function () {
             this.proxyMiddleware = httpProxy.create("localhost", 2222, "/app");

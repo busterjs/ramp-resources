@@ -573,6 +573,27 @@ buster.testCase("Resource middleware", {
         }
     },
 
+    "unmounting proxy": {
+        setUp: proxySetUp({
+            path: "/app",
+            mountPoint: "/here/be/proxy",
+            backend: "localhost:2222/elsewhere"
+        }),
+
+        tearDown: proxyTearDown,
+
+        "ends pending request": function (done) {
+            var proxy = this.rs.get("/app").content();
+            this.spy(proxy, "close");
+
+            this.backend.onRequest = done(function (req, res) {
+                this.resources.unmount();
+                assert.calledOnce(proxy.close);
+            }.bind(this));
+            h.req({ path: "/here/be/proxy/app/stuff" }).end();
+        }
+    },
+
     "mountPoints": {
         setUp: function () {
             this.resources = resourceMiddleWare.create();
