@@ -1,6 +1,6 @@
 {
     "name": "ramp-resources",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "Virtual file systems for exposing files and other resources on e.g. web servers",
     "homepage": "http://busterjs.org/docs/resources",
     "author": { "name": "August Lilleaas and Christian Johansen" },
