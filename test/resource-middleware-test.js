@@ -570,6 +570,13 @@ buster.testCase("Resource middleware", {
                     assert.equals(res.statusCode, 418);
                 })).end();
             }).end();
+        },
+
+        "ignores unmounted paths": function () {
+            var self = this;
+            refute.exception(function () {
+                self.resources.unmount("/the-cake-is-a-lie");
+            });
         }
     },
 
