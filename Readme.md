@@ -1,6 +1,17 @@
-# ramp-resources
+.. default-domain:: js
+.. highlight:: javascript
 
-[![Build status](https://secure.travis-ci.org/busterjs/ramp-resources.png?branch=master)](http://travis-ci.org/busterjs/ramp-resources)
+==============
+ramp-resources
+==============
 
-"Virtual file system" used to represent file sets on the client and on
-the server in Buster.JS test runs.
+    Files, proxies and inline "virtual files" over the air
+
+.. raw:: html
+
+    <a href="http://travis-ci.org/busterjs/ramp-resources" class="travis">
+      <img src="https://secure.travis-ci.org/busterjs/ramp-resources.png">
+    </a>
+
+``ramp-resources`` is a "virtual file system" used to represent file sets on the
+client and on the server in Buster.JS test runs.
