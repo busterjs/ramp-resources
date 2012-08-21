@@ -8,7 +8,6 @@
 var http = require("http");
 var fs = require("fs");
 var rs = require("../../lib/ramp-resources");
-var B = require("buster-core");
 
 if (process.argv.length < 3) {
     console.log("Usage:");

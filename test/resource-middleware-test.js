@@ -1,8 +1,8 @@
 var buster = require("buster");
-var resourceSet = require("../lib/resource-set");
-var resourceMiddleWare = require("../lib/resource-middleware");
 var when = require("when");
 var Path = require("path");
+var resourceSet = require("../lib/resource-set");
+var resourceMiddleWare = require("../lib/resource-middleware");
 var h = require("./test-helper");
 
 function createResourceSets() {
