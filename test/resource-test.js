@@ -610,5 +610,23 @@ buster.testCase("Resources", {
                 assert(serialized.cacheable);
             }), function () {});
         }
+    },
+
+    "hasContentFor": {
+        "returns true for own MIME type": function () {
+            var res = resource.create("/meh", { content: "Content" });
+            assert(res.hasContentFor("text/html"));
+        },
+
+        "returns false for unrecognized MIME type": function () {
+            var res = resource.create("/meh", { content: "Content" });
+            refute(res.hasContentFor("text/css"));
+        },
+
+        "returns true when alternative has desired MIME type": function () {
+            var res = resource.create("/meh", { content: "Content" });
+            res.addAlternative({ mimeType: "text/css", content: "body {}" });
+            assert(res.hasContentFor("text/css"));
+        }
     }
 });
