@@ -348,6 +348,24 @@ buster.testCase("Resources", {
         }
     },
 
+    "getContentFor": {
+        "returns self for own MIME type": function () {
+            var res = resource.create("/meh", { content: "Content" });
+            assert.same(res.getContentFor("text/html"), res);
+        },
+
+        "returns null for unrecognized MIME type": function () {
+            var res = resource.create("/meh", { content: "Content" });
+            refute(res.getContentFor("text/css"));
+        },
+
+        "returns alternative with desired MIME type": function () {
+            var res = resource.create("/meh", { content: "Content" });
+            res.addAlternative({ mimeType: "text/css", content: "body {}" });
+            assert(res.getContentFor("text/css"));
+        }
+    },
+
     "processors": {
         "process content": function (done) {
             var rs = resource.create("/path", {
@@ -466,6 +484,17 @@ buster.testCase("Resources", {
             rs.addProcessor(function () { return "OK"; });
 
             assert.equals(rs.etag, "4b0b20e81e9db06b84fc7589e22507eb3d3db04c");
+        },
+
+        "does not process content for alternatives": function (done) {
+            var rs = resource.create("/path", { content: "Hey" });
+            rs.addAlternative({ content: "Haha", mimeType: "text/css" });
+
+            rs.addProcessor(function (resource, content) {
+                return content + "!!";
+            });
+
+            assert.content(rs.getContentFor("text/css"), "Haha", done);
         }
     },
 
@@ -609,24 +638,34 @@ buster.testCase("Resources", {
             res.serialize().then(done(function (serialized) {
                 assert(serialized.cacheable);
             }), function () {});
-        }
-    },
-
-    "hasContentFor": {
-        "returns true for own MIME type": function () {
-            var res = resource.create("/meh", { content: "Content" });
-            assert(res.hasContentFor("text/html"));
         },
 
-        "returns false for unrecognized MIME type": function () {
+        "includes alternatives": function (done) {
             var res = resource.create("/meh", { content: "Content" });
-            refute(res.hasContentFor("text/css"));
+            res.addAlternative({
+                content: "CONTENT",
+                mimeType: "text/uppercase"
+            });
+
+            res.serialize().then(done(function (serialized) {
+                assert.match(serialized.alternatives, [{
+                    content: "CONTENT",
+                    mimeType: "text/uppercase"
+                }]);
+            }), function (e) { console.log(e); });
         },
 
-        "returns true when alternative has desired MIME type": function () {
+        "does not include alternatives when skipping content": function (done) {
             var res = resource.create("/meh", { content: "Content" });
-            res.addAlternative({ mimeType: "text/css", content: "body {}" });
-            assert(res.hasContentFor("text/css"));
+            res.addAlternative({
+                content: "CONTENT",
+                mimeType: "text/uppercase"
+            });
+
+            res.serialize({ includeContent: false }).then(done(function (s) {
+                refute(s.content);
+                refute.defined(s.alternatives);
+            }), function (e) { console.log(e); });
         }
     }
 });

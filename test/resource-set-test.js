@@ -815,6 +815,22 @@ buster.testCase("Resource sets", {
                 assert.isFalse(rs.get("/buster.js").cacheable);
                 assert.isTrue(rs.get("/sinon.js").cacheable);
             }));
+        },
+
+        "resolves resource with alternatives": function (done) {
+            resourceSet.deserialize({ resources: [{
+                path: "/buster.js",
+                content: "Hey mister",
+                alternatives: [{
+                    mimeType: "text/uppercase",
+                    content: "YOYO"
+                }]
+            }] }).then(function (rs) {
+                var resource = rs.get("/buster.js");
+                var alternative = resource.getContentFor("text/uppercase");
+                assert(alternative);
+                assert.content(alternative, "YOYO", done);
+            });
         }
     },
 
