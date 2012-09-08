@@ -78,7 +78,7 @@ buster.testCase("Resource set cache", {
 
         "uses cached alternatives for empty-content resource": function (done) {
             addResourcesAndInflate(this.cache, this.rs, [
-                ["/buster.coffee", "", { etag: "dedede" }]
+                ["/buster.coffee", "", { etag: "13ae76a598b2aa2cad2c7fd1f4954fff745835d1" }]
             ], function (rs) {
                 var resource = rs.get("/buster.coffee");
                 var alternative = resource.getContentFor("text/uppercase");

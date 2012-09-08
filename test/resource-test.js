@@ -667,5 +667,56 @@ buster.testCase("Resources", {
                 refute.defined(s.alternatives);
             }), function (e) { console.log(e); });
         }
+    },
+
+    "addAlternative": {
+        "updates etag": function () {
+            var res = resource.create("/meh", { content: "Ok", etag: "1" });
+            res.addAlternative({
+                content: "CONTENT",
+                mimeType: "text/uppercase"
+            });
+
+            assert.equals(res.etag, "d24ea95e25ef1cfbb7c7ee4187eae88695b13729");
+        },
+
+        "updates etag for every additional mime type alternative": function () {
+            var res = resource.create("/meh", { content: "Ok", etag: "1" });
+            res.addAlternative({ content: "CONTENT", mimeType: "text/upcase" });
+            res.addAlternative({ content: "CONTENT", mimeType: "text/locase" });
+
+            assert.equals(res.etag, "dec94ef5d39fff3bc911f4a16409d573238ea497");
+        },
+
+        "does not update etag when overriding existing alternative": function () {
+            var res = resource.create("/meh", { content: "Ok", etag: "1" });
+            res.addAlternative({ content: "CONTENT", mimeType: "text/upcase" });
+            res.addAlternative({ content: "CONTENT", mimeType: "text/locase" });
+            res.addAlternative({ content: "OTHER", mimeType: "text/upcase" });
+
+            assert.equals(res.etag, "dec94ef5d39fff3bc911f4a16409d573238ea497");
+        },
+
+        "alternative ordering does not affect etag": function () {
+            var res = resource.create("/meh", { content: "Ok" });
+            res.addAlternative({ content: "A", mimeType: "text/upcase" });
+            res.addAlternative({ content: "B", mimeType: "text/locase" });
+
+            var res2 = resource.create("/meh", { content: "Ok" });
+            res2.addAlternative({ content: "A", mimeType: "text/locase" });
+            res2.addAlternative({ content: "B", mimeType: "text/upcase" });
+
+            assert.equals(res.etag, res2.etag);
+        },
+
+        "uses alternative custom etag for etag generation": function () {
+            var res = resource.create("/meh", { content: "Ok" });
+            res.addAlternative({ content: "A", mimeType: "text/a", etag: "A" });
+
+            var res2 = resource.create("/meh", { content: "Ok" });
+            res2.addAlternative({ content: "A", mimeType: "text/a" });
+
+            refute.equals(res.etag, res2.etag);
+        }
     }
 });
