@@ -49,6 +49,19 @@ buster.testCase("Resource set cache", {
     },
 
     "inflate": {
+        setUp: function (done) {
+            var rs = resourceSet.create();
+            add(rs, "/buster.coffee", "Yoo!", {
+                etag: "dedede",
+                alternatives: [{
+                    content: "HAHA",
+                    mimeType: "text/uppercase"
+                }]
+            }).then(function () {
+                this.cache.inflate(rs).then(function () { done(); });
+            }.bind(this));
+        },
+
         "resolves with resource set": function (done) {
             this.cache.inflate(this.rs).then(done(function (rs) {
                 assert.same(rs, this.rs);
@@ -60,6 +73,17 @@ buster.testCase("Resource set cache", {
                 ["/buster.js", "", { etag: "abcd1234" }]
             ], function (rs) {
                 assert.content(rs.get("/buster.js"), "Yo!", done);
+            });
+        },
+
+        "uses cached alternatives for empty-content resource": function (done) {
+            addResourcesAndInflate(this.cache, this.rs, [
+                ["/buster.coffee", "", { etag: "dedede" }]
+            ], function (rs) {
+                var resource = rs.get("/buster.coffee");
+                var alternative = resource.getContentFor("text/uppercase");
+                assert.defined(alternative);
+                assert.content(alternative, "HAHA", done);
             });
         },
 
