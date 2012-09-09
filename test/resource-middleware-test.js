@@ -627,5 +627,60 @@ buster.testCase("Resource middleware", {
             this.resources.unmount("/sinon/baby");
             assert.equals(this.resources.mountPoints(), []);
         }
+    },
+
+    "alternatives": {
+        setUp: function (done) {
+            this.resources = resourceMiddleWare.create();
+            var resource = this.sets.withBuster.addResource({
+                path: "/sinon.coffee",
+                content: "Coffee",
+                mimeType: "text/coffeescript"
+            }).then(function (resource) {
+                resource.addAlternative({
+                    mimeType: "text/javascript",
+                    content: "JavaScript"
+                });
+                this.sets.withBuster.loadPath.append("/sinon.coffee");
+                this.resources.mount("/", this.sets.withBuster);
+                this.server = h.createServer(this.resources, done);
+            }.bind(this));
+        },
+
+        tearDown: h.serverTearDown,
+
+        "serves original resource": function (done) {
+            h.req({
+                path: "/sinon.coffee"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "Coffee");
+            })).end();
+        },
+
+        "serves alternative for given mimeType": function (done) {
+            h.req({
+                path: "/sinon.coffee?rampMimeType=text/javascript"
+            }, done(function (req, res, body) {
+                buster.log(res.headers);
+                assert.equals(res.statusCode, 200);
+                assert.equals(body, "JavaScript");
+                assert.match(res.headers["content-type"], "text/javascript");
+            })).end();
+        },
+
+        "serves original for missing mimeType alternative": function (done) {
+            h.req({
+                path: "/sinon.coffee?rampMimeType=application/javascript"
+            }, done(function (req, res, body) {
+                assert.equals(body, "Coffee");
+            })).end();
+        },
+
+        "loads text/javascript mime alternative in load path": function (done) {
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.match(body, "src=\"/sinon.coffee?rampMimeType=text/javascript\"");
+            })).end();
+        }
     }
 });
