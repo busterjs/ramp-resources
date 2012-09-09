@@ -348,6 +348,16 @@ buster.testCase("Resources", {
         }
     },
 
+    "with fully qualified url as path": {
+        "content is path": function (done) {
+            var rs = resource.create("file:///tmp/trash.txt");
+
+            rs.content().then(done(function (content) {
+                assert.equals(content, "file:///tmp/trash.txt");
+            }));
+        }
+    },
+
     "getContentFor": {
         "returns self for own MIME type": function () {
             var res = resource.create("/meh", { content: "Content" });
@@ -665,6 +675,15 @@ buster.testCase("Resources", {
             res.serialize({ includeContent: false }).then(done(function (s) {
                 refute(s.content);
                 refute.defined(s.alternatives);
+            }), function (e) { console.log(e); });
+        },
+
+        "does not include content for fully qualified path": function (done) {
+            var res = resource.create("http://cdn/thing.js");
+
+            res.serialize({ includeContent: false }).then(done(function (s) {
+                refute(s.content);
+                assert.equals(s.path, "http://cdn/thing.js");
             }), function (e) { console.log(e); });
         }
     },

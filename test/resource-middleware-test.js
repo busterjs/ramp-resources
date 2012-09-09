@@ -743,7 +743,6 @@ buster.testCase("Resource middleware", {
             h.req({
                 path: "/sinon.coffee?rampMimeType=application/javascript"
             }, done(function (req, res, body) {
-                buster.log(res.headers);
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "JavaScript");
                 assert.match(res.headers["content-type"], "application/javascript");
@@ -761,6 +760,28 @@ buster.testCase("Resource middleware", {
         "loads application/javascript mime alternative in load path": function (done) {
             h.req({ path: "/" }, done(function (req, res, body) {
                 assert.match(body, "src=\"/sinon.coffee?rampMimeType=application/javascript\"");
+            })).end();
+        }
+    },
+
+    "fully qualified resources": {
+        setUp: function (done) {
+            this.resources = resourceMiddleWare.create();
+            this.sets.withBuster.addResource("file:///tmp/hey.js").then(function (r) {
+                this.sets.withBuster.loadPath.append(r.path);
+                this.resources.mount("/", this.sets.withBuster);
+                this.server = h.createServer(this.resources, done);
+            }.bind(this));
+        },
+
+        tearDown: h.serverTearDown,
+
+        "includes fully qualified resource with script tag": function (done) {
+            h.req({
+                path: "/"
+            }, done(function (req, res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.match(body, "src=\"file:///tmp/hey.js\"");
             })).end();
         }
     }
