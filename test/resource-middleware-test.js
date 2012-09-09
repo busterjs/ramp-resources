@@ -262,6 +262,87 @@ buster.testCase("Resource middleware", {
         }
     },
 
+    "CSS resources in load path": {
+        setUp: function (done) {
+            this.sets.withBuster.addResource({
+                path: "/buster.css",
+                content: "body {}"
+            });
+
+            this.sets.withBuster.loadPath.append("/buster.css");
+            this.resources = resourceMiddleWare.create();
+            this.resources.mount("/", this.sets.withBuster);
+            this.server = h.createServer(this.resources, done);
+        },
+
+        tearDown: h.serverTearDown,
+
+
+        "serves root resource with loadPath styles": function (done) {
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.match(body, "<link");
+                assert.match(body, "href=\"/buster.css\"");
+                assert.match(body, "type=\"text/css\"");
+                assert.match(body, "rel=\"stylesheet\"");
+            })).end();
+        },
+
+        "serves custom root resource with loadPath styles": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/",
+                content: "<html></html>"
+            });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.match(body, "<html><link");
+            })).end();
+        },
+
+        "adds loadPath styles in head": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/",
+                content: "<html><head></head><body></body></html>"
+            });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.match(body, "<head><link");
+            })).end();
+        },
+
+        "serves blank root resource with loadPath styles": function (done) {
+            this.sets.withBuster.addResource({ path: "/", content: "<h1>Yo" });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                assert.match(body, "\"/buster.css\"><h1>Yo");
+            })).end();
+        },
+
+        "serves root resource with custom styles location": function (done) {
+            this.sets.withBuster.addResource({
+                path: "/",
+                content: "<html>foo{{styles}}bar</html>"
+            });
+
+            h.req({ path: "/" }, done(function (req, res, body) {
+                refute.match(body, "{{scripts}}");
+                assert.match(body, "<html>foo<link");
+            })).end();
+        },
+
+        "does not create script tag for CSS in load path": function (done) {
+            h.req({ path: "/" }, done(function (req, res, body) {
+                refute.match(body, "href=\"/buster.js\"");
+            })).end();
+        },
+
+        "does not create link tag for JS in load path": function (done) {
+            h.req({ path: "/" }, done(function (req, res, body) {
+                refute.match(body, "src=\"/buster.css\"");
+            })).end();
+
+        }
+    },
+
     "resource set mounted at path": {
         setUp: function (done) {
             this.resources = resourceMiddleWare.create();
@@ -638,7 +719,7 @@ buster.testCase("Resource middleware", {
                 mimeType: "text/coffeescript"
             }).then(function (resource) {
                 resource.addAlternative({
-                    mimeType: "text/javascript",
+                    mimeType: "application/javascript",
                     content: "JavaScript"
                 });
                 this.sets.withBuster.loadPath.append("/sinon.coffee");
@@ -660,26 +741,26 @@ buster.testCase("Resource middleware", {
 
         "serves alternative for given mimeType": function (done) {
             h.req({
-                path: "/sinon.coffee?rampMimeType=text/javascript"
+                path: "/sinon.coffee?rampMimeType=application/javascript"
             }, done(function (req, res, body) {
                 buster.log(res.headers);
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "JavaScript");
-                assert.match(res.headers["content-type"], "text/javascript");
+                assert.match(res.headers["content-type"], "application/javascript");
             })).end();
         },
 
         "serves original for missing mimeType alternative": function (done) {
             h.req({
-                path: "/sinon.coffee?rampMimeType=application/javascript"
+                path: "/sinon.coffee?rampMimeType=text/css"
             }, done(function (req, res, body) {
                 assert.equals(body, "Coffee");
             })).end();
         },
 
-        "loads text/javascript mime alternative in load path": function (done) {
+        "loads application/javascript mime alternative in load path": function (done) {
             h.req({ path: "/" }, done(function (req, res, body) {
-                assert.match(body, "src=\"/sinon.coffee?rampMimeType=text/javascript\"");
+                assert.match(body, "src=\"/sinon.coffee?rampMimeType=application/javascript\"");
             })).end();
         }
     }
