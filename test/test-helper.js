@@ -1,11 +1,11 @@
 var B = require("buster");
-var resource = require("../lib/resource");
+var rr = require("../lib/ramp-resources");
 var when = require("when");
 var http = require("http");
 
 function verifyResourceError(message, e) {
     if (e.name !== "InvalidResourceError") {
-        this.fail("Expected resource.create to fail with " +
+        this.fail("Expected rr.createResource to fail with " +
                   "InvalidResourceError, but failed with " + e.name);
     }
     if (!new RegExp(message).test(e.message)) {
@@ -19,7 +19,7 @@ B.assertions.add("invalidResource", {
     assert: function (path, res, message) {
         try {
             if (typeof path === "string") {
-                resource.create(path, res);
+                rr.createResource(path, res);
                 return false;
             } else {
                 var ret;

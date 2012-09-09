@@ -1,6 +1,5 @@
 var buster = require("buster");
-var resource = require("../lib/resource");
-var resourceSet = require("../lib/resource-set");
+var rr = require("../lib/ramp-resources");
 var Path = require("path");
 var when = require("when");
 require("./test-helper.js");
@@ -13,17 +12,17 @@ var logStack = function (err) {
 
 buster.testCase("Resource sets", {
     setUp: function () {
-        this.rs = resourceSet.create(FIXTURE_DIR);
+        this.rs = rr.createResourceSet(FIXTURE_DIR);
     },
 
     "create": {
         "defaults root path to current working directory": function () {
-            var rs = resourceSet.create();
+            var rs = rr.createResourceSet();
             assert.equals(rs.rootPath, process.cwd());
         },
 
         "specifies root path": function () {
-            var rs = resourceSet.create("/tmp");
+            var rs = rr.createResourceSet("/tmp");
             assert.equals(rs.rootPath, "/tmp");
         }
     },
@@ -132,7 +131,7 @@ buster.testCase("Resource sets", {
 
     "adding buster.resource objects": {
         setUp: function () {
-            this.resource = resource.create("/buster.js", {
+            this.resource = rr.createResource("/buster.js", {
                 content: "var buster = {};"
             });
         },
@@ -150,7 +149,7 @@ buster.testCase("Resource sets", {
 
     "as array-like": {
         setUp: function () {
-            this.resource = resource.create("/buster.js", {
+            this.resource = rr.createResource("/buster.js", {
                 content: "var buster = {};"
             });
         },
@@ -185,7 +184,7 @@ buster.testCase("Resource sets", {
         },
 
         "exposes added resource on numeric index": function (done) {
-            var rs = resource.create("/sinon.js", { content: "var sinon;" });
+            var rs = rr.createResource("/sinon.js", { content: "var sinon;" });
             when.all([this.rs.addResource(this.resource),
                       this.rs.addResource(rs)]).then(done(function (resources) {
                 assert.equals(this.rs.length, 2);
@@ -354,8 +353,8 @@ buster.testCase("Resource sets", {
     "process": {
         setUp: function () {
             this.resources = [
-                resource.create("/a.txt", { content: "a", etag: "1234" }),
-                resource.create("/b.txt", { content: "b", etag: "2345" })
+                rr.createResource("/a.txt", { content: "a", etag: "1234" }),
+                rr.createResource("/b.txt", { content: "b", etag: "2345" })
             ];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
@@ -365,8 +364,8 @@ buster.testCase("Resource sets", {
         },
 
         "processes all resources": function (done) {
-            var resources = [resource.create("/a.txt", { content: "a" }),
-                             resource.create("/b.txt", { content: "b" })];
+            var resources = [rr.createResource("/a.txt", { content: "a" }),
+                             rr.createResource("/b.txt", { content: "b" })];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
             this.stub(resources[0], "process").returns(deferred.promise);
@@ -380,8 +379,8 @@ buster.testCase("Resource sets", {
         },
 
         "processes all resources": function (done) {
-            var resources = [resource.create("/a.txt", { content: "a" }),
-                             resource.create("/b.txt", { content: "b" })];
+            var resources = [rr.createResource("/a.txt", { content: "a" }),
+                             rr.createResource("/b.txt", { content: "b" })];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
             this.stub(resources[0], "process").returns(deferred.promise);
@@ -396,8 +395,8 @@ buster.testCase("Resource sets", {
 
         "skips resources in cache manifest": function (done) {
             var resources = [
-                resource.create("/a.txt", { content: "a", etag: "1234" }),
-                resource.create("/b.txt", { content: "b", etag: "2345" })
+                rr.createResource("/a.txt", { content: "a", etag: "1234" }),
+                rr.createResource("/b.txt", { content: "b", etag: "2345" })
             ];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
@@ -413,8 +412,8 @@ buster.testCase("Resource sets", {
 
         "requires cache manifest etag match": function (done) {
             var resources = [
-                resource.create("/a.txt", { content: "a", etag: "1234" }),
-                resource.create("/b.txt", { content: "b", etag: "2345" })
+                rr.createResource("/a.txt", { content: "a", etag: "1234" }),
+                rr.createResource("/b.txt", { content: "b", etag: "2345" })
             ];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
@@ -430,8 +429,8 @@ buster.testCase("Resource sets", {
 
         "matches any cached version in manifest": function (done) {
             var resources = [
-                resource.create("/a.txt", { content: "a", etag: "1234" }),
-                resource.create("/b.txt", { content: "b", etag: "2345" })
+                rr.createResource("/a.txt", { content: "a", etag: "1234" }),
+                rr.createResource("/b.txt", { content: "b", etag: "2345" })
             ];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
@@ -449,8 +448,8 @@ buster.testCase("Resource sets", {
 
         "resolves with cache manifest": function (done) {
             var resources = [
-                resource.create("/a.txt", { content: "a", etag: "1234" }),
-                resource.create("/b.txt", { content: "b", etag: "2345" })
+                rr.createResource("/a.txt", { content: "a", etag: "1234" }),
+                rr.createResource("/b.txt", { content: "b", etag: "2345" })
             ];
             var deferred = when.defer();
             deferred.resolver.resolve(null);
@@ -742,7 +741,7 @@ buster.testCase("Resource sets", {
 
     "deserialize": {
         "resolves as resource set with single resource": function (done) {
-            resourceSet.deserialize({ resources: [{
+            rr.deserialize({ resources: [{
                 path: "/buster.js",
                 content: "Hey mister"
             }] }).then(function (rs) {
@@ -752,7 +751,7 @@ buster.testCase("Resource sets", {
         },
 
         "resolves resource set with two resources": function (done) {
-            resourceSet.deserialize({ resources: [{
+            rr.deserialize({ resources: [{
                 path: "/buster.js",
                 content: "Hey mister"
             }, {
@@ -766,7 +765,7 @@ buster.testCase("Resource sets", {
         },
 
         "resolves resource set with load path": function (done) {
-            resourceSet.deserialize({ loadPath: ["/buster.js"], resources: [{
+            rr.deserialize({ loadPath: ["/buster.js"], resources: [{
                 path: "/buster.js",
                 content: "Hey mister"
             }, {
@@ -778,11 +777,11 @@ buster.testCase("Resource sets", {
         },
 
         "deserializes serialized resource set": function (done) {
-            var rs = resourceSet.create(FIXTURE_DIR);
+            var rs = rr.createResourceSet(FIXTURE_DIR);
             rs.addResources(["foo.js", "bar.js"]);
             var cb = buster.countdown(2, done);
             rs.serialize().then(function (serialized) {
-                resourceSet.deserialize(serialized).then(function (rs2) {
+                rr.deserialize(serialized).then(function (rs2) {
                     assert.equals(rs.length, rs2.length);
                     assert.equals(rs.loadPath.paths, rs.loadPath.paths);
                     assert.resourceEqual(rs.get("/foo.js"),
@@ -794,7 +793,7 @@ buster.testCase("Resource sets", {
         },
 
         "rejects if deserialized data is corrupt": function (done) {
-            resourceSet.deserialize({ loadPath: ["/buster.js"], resources: [{
+            rr.deserialize({ loadPath: ["/buster.js"], resources: [{
                 path: "/buster.js"
             }] }).then(function () {}, done(function (err) {
                 assert.defined(err);
@@ -803,7 +802,7 @@ buster.testCase("Resource sets", {
         },
 
         "deserializes cacheable flag": function (done) {
-            resourceSet.deserialize({ resources: [{
+            rr.deserialize({ resources: [{
                 path: "/buster.js",
                 content: "Hey mister",
                 cacheable: false
@@ -818,7 +817,7 @@ buster.testCase("Resource sets", {
         },
 
         "resolves resource with alternatives": function (done) {
-            resourceSet.deserialize({ resources: [{
+            rr.deserialize({ resources: [{
                 path: "/buster.js",
                 content: "Hey mister",
                 alternatives: [{
@@ -836,8 +835,8 @@ buster.testCase("Resource sets", {
 
     "concat": {
         "creates new resource set": function () {
-            var rs1 = resourceSet.create();
-            var rs2 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
+            var rs2 = rr.createResourceSet();
 
             var rs3 = rs1.concat(rs2);
 
@@ -846,11 +845,11 @@ buster.testCase("Resource sets", {
         },
 
         "adds resources from all sources": function (done) {
-            var rs1 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
             var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/sinon.js", content: "Nok" });
-            var rs3 = resourceSet.create();
+            var rs3 = rr.createResourceSet();
             var add3 = rs2.addResource({ path: "/when.js", content: "when()" });
 
             when.all([add1, add2, add3]).then(done(function () {
@@ -864,9 +863,9 @@ buster.testCase("Resource sets", {
         },
 
         "resources overwrite from right to left": function (done) {
-            var rs1 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
             var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/buster.js", content: "Nok" });
 
             when.all([add1, add2]).then(done(function () {
@@ -876,9 +875,9 @@ buster.testCase("Resource sets", {
         },
 
         "appends load in order": function (done) {
-            var rs1 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
             var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/sinon.js", content: "Nok" });
 
             when.all([add1, add2]).then(done(function () {
@@ -891,7 +890,7 @@ buster.testCase("Resource sets", {
         },
 
         "concats backend resources": function (done) {
-            var rs1 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
 
             rs1.addResource({
                 path: "/buster",
@@ -903,7 +902,7 @@ buster.testCase("Resource sets", {
         },
 
         "concats combine resources": function (done) {
-            var rs1 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
             rs1.addResources([
                 { path: "/a", content: "1" },
                 { path: "/b", content: "2" },
@@ -917,8 +916,8 @@ buster.testCase("Resource sets", {
         },
 
         "uses rootpath of target resource set": function () {
-            var rs1 = resourceSet.create("/tmp");
-            var rs2 = resourceSet.create("/var");
+            var rs1 = rr.createResourceSet("/tmp");
+            var rs2 = rr.createResourceSet("/var");
 
             var rs3 = rs1.concat(rs2);
 
@@ -926,7 +925,7 @@ buster.testCase("Resource sets", {
         },
 
         "restricts length to unique resources": function (done) {
-            var rs1 = resourceSet.create();
+            var rs1 = rr.createResourceSet();
             var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
             var add2 = rs1.addResource({ path: "/sinon.js", content: "Yep" });
 
@@ -941,7 +940,7 @@ buster.testCase("Resource sets", {
 
     "appendLoad": {
         setUp: function (done) {
-            this.rs = resourceSet.create(FIXTURE_DIR);
+            this.rs = rr.createResourceSet(FIXTURE_DIR);
             var resource = { path: "/buster.js", content: "Ok" };
             this.rs.addResource(resource).then(function () {
                 done();
@@ -1014,7 +1013,7 @@ buster.testCase("Resource sets", {
 
     "prependLoad": {
         setUp: function (done) {
-            this.rs = resourceSet.create(FIXTURE_DIR);
+            this.rs = rr.createResourceSet(FIXTURE_DIR);
             var resource = { path: "/buster.js", content: "Ok" };
             this.rs.addResource(resource).then(function () {
                 done();
@@ -1088,7 +1087,7 @@ buster.testCase("Resource sets", {
 
     "then": {
         setUp: function () {
-            this.rs = resourceSet.create(FIXTURE_DIR);
+            this.rs = rr.createResourceSet(FIXTURE_DIR);
         },
 
         "calls callback after pending operations": function (done) {

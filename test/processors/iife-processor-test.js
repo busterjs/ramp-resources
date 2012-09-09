@@ -1,12 +1,12 @@
 var buster = require("buster");
-var resource = require("../../lib/resource");
+var rr = require("../../lib/ramp-resources");
 var iife = require("../../lib/processors/iife");
 require("../test-helper");
 
 buster.testCase("Processors", {
     "iife processor": {
         setUp: function () {
-            this.resource = resource.create("/buster.js", {
+            this.resource = rr.createResource("/buster.js", {
                 content: "var buster = {};"
             });
         },
@@ -40,7 +40,7 @@ buster.testCase("Processors", {
         },
 
         "separates exports from contents with semicolon": function (done) {
-            this.resource = resource.create("/buster.js", {
+            this.resource = rr.createResource("/buster.js", {
                 content: "var buster = {}"
             });
             this.resource.addProcessor(iife(["buster"]));

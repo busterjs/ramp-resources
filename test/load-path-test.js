@@ -1,10 +1,10 @@
 var buster = require("buster");
-var resourceSet = require("../lib/resource-set");
+var rr = require("../lib/ramp-resources");
 require("./test-helper.js");
 
 buster.testCase("Load path", {
     setUp: function () {
-        this.rs = resourceSet.create();
+        this.rs = rr.createResourceSet();
     },
 
     "append": {

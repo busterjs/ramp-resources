@@ -1,7 +1,6 @@
 var buster = require("buster");
 var when = require("when");
-var resourceSet = require("../lib/resource-set");
-var resourceSetCache = require("../lib/resource-set-cache");
+var rr = require("../lib/ramp-resources");
 require("./test-helper");
 
 function add(rs, path, content, options) {
@@ -21,9 +20,9 @@ function addResourcesAndInflate(cache, resourceSet, resources, done) {
 }
 
 function maxSizeSetUp(done) {
-    this.rs = resourceSet.create();
-    this.rs2 = resourceSet.create();
-    this.cache = resourceSetCache.create({ ttl: 250, maxSize: 150 });
+    this.rs = rr.createResourceSet();
+    this.rs2 = rr.createResourceSet();
+    this.cache = rr.createCache({ ttl: 250, maxSize: 150 });
 
     when.all([
         add(this.rs, "/buster.js", "Yo!", { etag: "abcd" }),
@@ -36,10 +35,10 @@ function maxSizeSetUp(done) {
 buster.testCase("Resource set cache", {
     setUp: function (done) {
         this.clock = this.useFakeTimers();
-        this.rs = resourceSet.create();
-        this.cache = resourceSetCache.create({ ttl: 250 });
+        this.rs = rr.createResourceSet();
+        this.cache = rr.createCache({ ttl: 250 });
 
-        var rs = resourceSet.create();
+        var rs = rr.createResourceSet();
         when.all([
             add(rs, "/buster.js", "Yo!", { etag: "abcd1234" }),
             add(rs, "/sinon.js", "Hey!", {})
@@ -50,7 +49,7 @@ buster.testCase("Resource set cache", {
 
     "inflate": {
         setUp: function (done) {
-            var rs = resourceSet.create();
+            var rs = rr.createResourceSet();
             add(rs, "/buster.coffee", "Yoo!", {
                 etag: "dedede",
                 alternatives: [{
@@ -133,7 +132,7 @@ buster.testCase("Resource set cache", {
         },
 
         "does not cache uncacheable resource": function (done) {
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             addResourcesAndInflate(this.cache, this.rs, [
                 ["/uncacheable.js", "Stuff", { cacheable: false, etag: "1" }]
             ], function () {
@@ -146,7 +145,7 @@ buster.testCase("Resource set cache", {
         },
 
         "does not cache resources when content() rejects": function (done) {
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             var d = when.defer();
             d.resolver.reject("Oh noes");
             addResourcesAndInflate(this.cache, this.rs, [
@@ -161,7 +160,7 @@ buster.testCase("Resource set cache", {
         },
 
         "does not look up from cache when content() rejects": function (done) {
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             var d = when.defer();
             d.resolver.reject("Oh noes");
             addResourcesAndInflate(this.cache, this.rs, [
@@ -181,7 +180,7 @@ buster.testCase("Resource set cache", {
         },
 
         "does not look up from cache when content() throws": function (done) {
-            var rs2 = resourceSet.create();
+            var rs2 = rr.createResourceSet();
             addResourcesAndInflate(this.cache, this.rs, [
                 ["/a.js", "Cached", { etag: "1" }]
             ], function () {
@@ -213,8 +212,8 @@ buster.testCase("Resource set cache", {
         },
 
         "keeps resources indefinitely with -1 ttl": function (done) {
-            var rs = resourceSet.create();
-            var cache = resourceSetCache.create({ ttl: -1 });
+            var rs = rr.createResourceSet();
+            var cache = rr.createCache({ ttl: -1 });
 
             add(rs, "/buster.js", "Yo!", { etag: "abcd" }).then(function () {
                 cache.inflate(rs).then(done(function () {

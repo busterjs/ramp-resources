@@ -1,14 +1,13 @@
 var buster = require("buster");
 var when = require("when");
 var Path = require("path");
-var resourceSet = require("../lib/resource-set");
-var resourceMiddleWare = require("../lib/resource-middleware");
+var rr = require("../lib/ramp-resources");
 var h = require("./test-helper");
 
 function createResourceSets() {
     var resourceSets = {
-        withBuster: resourceSet.create(),
-        withSinon: resourceSet.create()
+        withBuster: rr.createResourceSet(),
+        withSinon: rr.createResourceSet()
     };
 
     resourceSets.withBuster.addResource({
@@ -26,8 +25,8 @@ function createResourceSets() {
 function proxySetUp(options) {
     return function (done) {
         this.backend = h.createProxyBackend(2222);
-        this.resources = resourceMiddleWare.create();
-        this.rs = resourceSet.create();
+        this.resources = rr.createMiddleware();
+        this.rs = rr.createResourceSet();
         this.rs.addResource({ path: options.path, backend: options.backend });
         this.resources.mount(options.mountPoint, this.rs);
         this.server = h.createServer(this.resources, done);
@@ -47,7 +46,7 @@ buster.testCase("Resource middleware", {
 
     "no resource sets": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             this.server = h.createServer(this.resources, done);
         },
 
@@ -90,7 +89,7 @@ buster.testCase("Resource middleware", {
 
     "mount": {
         "fails if mounting nothing": function () {
-            var middleware = resourceMiddleWare.create();
+            var middleware = rr.createMiddleware();
             assert.exception(function () {
                 middleware.mount("/", null);
             });
@@ -99,7 +98,7 @@ buster.testCase("Resource middleware", {
 
     "resource set mounted": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             this.resources.mount("/", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
@@ -270,7 +269,7 @@ buster.testCase("Resource middleware", {
             });
 
             this.sets.withBuster.loadPath.append("/buster.css");
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             this.resources.mount("/", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
@@ -345,7 +344,7 @@ buster.testCase("Resource middleware", {
 
     "resource set mounted at path": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             this.resources.mount("/buster/2.0", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
@@ -438,7 +437,7 @@ buster.testCase("Resource middleware", {
 
     "with context path": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create("/ctx/1");
+            this.resources = rr.createMiddleware("/ctx/1");
             this.resources.mount("/", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
@@ -612,7 +611,7 @@ buster.testCase("Resource middleware", {
 
     "unmount": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             this.resources.mount("/buster", this.sets.withBuster);
             this.server = h.createServer(this.resources, done);
         },
@@ -684,7 +683,7 @@ buster.testCase("Resource middleware", {
 
     "mountPoints": {
         setUp: function () {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
         },
 
         "returns empty array when nothing is mounted": function () {
@@ -712,7 +711,7 @@ buster.testCase("Resource middleware", {
 
     "alternatives": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             var resource = this.sets.withBuster.addResource({
                 path: "/sinon.coffee",
                 content: "Coffee",
@@ -766,7 +765,7 @@ buster.testCase("Resource middleware", {
 
     "fully qualified resources": {
         setUp: function (done) {
-            this.resources = resourceMiddleWare.create();
+            this.resources = rr.createMiddleware();
             this.sets.withBuster.addResource("file:///tmp/hey.js").then(function (r) {
                 this.sets.withBuster.loadPath.append(r.path);
                 this.resources.mount("/", this.sets.withBuster);

@@ -3,13 +3,13 @@
  * the resource set middleware and cache (for optimal performance).
  */
 var http = require("http");
-var rs = require("../../lib/ramp-resources");
+var rr = require("../../lib/ramp-resources");
 var HOUR = 1000 * 60 * 60;
 var MB = 1024;
 
 // These two objects should live as long as your server lives
-var middleware = rs.resourceMiddleware.create("/resources");
-var cache = rs.resourceSetCache.create({ ttl: HOUR, maxSize: 100 * MB });
+var middleware = rr.createMiddleware("/resources");
+var cache = rr.createCache({ ttl: HOUR, maxSize: 100 * MB });
 
 /**
  * This function expects a payload, e.g.:
@@ -18,8 +18,8 @@ var cache = rs.resourceSetCache.create({ ttl: HOUR, maxSize: 100 * MB });
  * middleware under the provided path
  */
 function mount(payload) {
-    rs.resourceSet.deserialize(payload.resourceSet).then(function (rs) {
-        cache.inflate(rs).then(function (resourceSet) {
+    rr.resourceSet.deserialize(payload.resourceSet).then(function (rr) {
+        cache.inflate(rr).then(function (resourceSet) {
             console.log("Mounting resource set at", payload.mountPoint);
             middleware.mount(payload.mountPoint, resourceSet);
         }, function (e) {

@@ -1,6 +1,6 @@
 var buster = require("buster");
 var when = require("when");
-var resource = require("../lib/resource");
+var rr = require("../lib/ramp-resources");
 require("./test-helper.js");
 
 buster.testCase("Resources", {
@@ -34,12 +34,12 @@ buster.testCase("Resources", {
         },
 
         "does not fail with only etag": function () {
-            var rs = resource.create("/path", { etag: "abc123" });
+            var rs = rr.createResource("/path", { etag: "abc123" });
             assert.defined(rs);
         },
 
         "returns resource": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Something"
             });
 
@@ -47,7 +47,7 @@ buster.testCase("Resources", {
         },
 
         "creates cacheable resources by default": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Something"
             });
 
@@ -55,7 +55,7 @@ buster.testCase("Resources", {
         },
 
         "creates uncacheable resource": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Something",
                 cacheable: false
             });
@@ -66,12 +66,12 @@ buster.testCase("Resources", {
 
     "headers": {
         "are never null": function () {
-            var rs = resource.create("/path", { content: "Hey" });
+            var rs = rr.createResource("/path", { content: "Hey" });
             assert.defined(rs.headers());
         },
 
         "reflect configured values": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Hey",
                 headers: {
                     "Content-Type": "application/xhtml",
@@ -86,13 +86,13 @@ buster.testCase("Resources", {
         },
 
         "has default Content-Type": function () {
-            var rs = resource.create("/path", { content: "Hey" });
+            var rs = rr.createResource("/path", { content: "Hey" });
 
             assert.defined(rs.headers()["Content-Type"]);
         },
 
         "includes etag when set": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 etag: "1234abc",
                 content: "Hey"
             });
@@ -101,7 +101,7 @@ buster.testCase("Resources", {
         },
 
         "are empty for backend resource": function () {
-            var rs = resource.create("/api", { backend: "http://localhost" });
+            var rs = rr.createResource("/api", { backend: "http://localhost" });
 
             assert.equals(rs.headers(), {});
         }
@@ -109,14 +109,14 @@ buster.testCase("Resources", {
 
     "Content-Type": {
         "defaults to text/html and utf-8": function () {
-            var rs = resource.create("/path", { content: "<!DOCTYPE html>" });
+            var rs = rr.createResource("/path", { content: "<!DOCTYPE html>" });
 
             assert.equals(rs.header("Content-Type"),
                           "text/html; charset=utf-8");
         },
 
         "defaults to text/html and set charset": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 encoding: "iso-8859-1",
                 content: "<!DOCTYPE html>"
             });
@@ -126,7 +126,7 @@ buster.testCase("Resources", {
         },
 
         "defaults to text/css for CSS files": function () {
-            var rs = resource.create("/path.css", {
+            var rs = rr.createResource("/path.css", {
                 content: "body {}"
             });
 
@@ -135,7 +135,7 @@ buster.testCase("Resources", {
         },
 
         "defaults to application/javascript for JS files": function () {
-            var rs = resource.create("/path.js", {
+            var rs = rr.createResource("/path.js", {
                 content: "function () {}"
             });
 
@@ -144,7 +144,7 @@ buster.testCase("Resources", {
         },
 
         "does not include charset for binary files": function () {
-            var rs = resource.create("/file.png", {
+            var rs = rr.createResource("/file.png", {
                 content: new Buffer([])
             });
 
@@ -152,7 +152,7 @@ buster.testCase("Resources", {
         },
 
         "defaults encoding to base64 for binary files": function () {
-            var rs = resource.create("/file.png", {
+            var rs = rr.createResource("/file.png", {
                 content: new Buffer([])
             });
 
@@ -162,7 +162,7 @@ buster.testCase("Resources", {
 
     "with string content": {
         "serves string as content": function (done) {
-            var rs = resource.create("/path.js", {
+            var rs = rr.createResource("/path.js", {
                 content: "console.log(42);"
             });
 
@@ -173,7 +173,7 @@ buster.testCase("Resources", {
     "with buffer content": {
         "assumes utf-8 encoded string": function (done) {
             var bytes = [231, 167, 129, 227, 129, 175, 227, 130, 172];
-            var rs = resource.create("/path.txt", {
+            var rs = rr.createResource("/path.txt", {
                 content: new Buffer(bytes)
             });
 
@@ -181,7 +181,7 @@ buster.testCase("Resources", {
         },
 
         "encodes png with base64": function (done) {
-            var rs = resource.create("/3x3-cross.png", {
+            var rs = rr.createResource("/3x3-cross.png", {
                 content: new Buffer([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0,
                                      13, 73, 72, 68, 82, 0, 0, 0, 3, 0, 0, 0,
                                      3, 8, 6, 0, 0, 0, 86, 40, 181, 191, 0, 0,
@@ -211,72 +211,72 @@ buster.testCase("Resources", {
 
     "respondsTo": {
         "true when path matches resource path": function () {
-            var rs = resource.create("/file.js", { content: "Yo" });
+            var rs = rr.createResource("/file.js", { content: "Yo" });
             assert(rs.respondsTo("/file.js"));
         },
 
         "true when path sans trailing slash == resource path": function () {
-            var rs = resource.create("/file", { content: "Yo" });
+            var rs = rr.createResource("/file", { content: "Yo" });
             assert(rs.respondsTo("/file/"));
         },
 
         "true when path == resource path sans trailing slash": function () {
-            var rs = resource.create("/file/", { content: "Yo" });
+            var rs = rr.createResource("/file/", { content: "Yo" });
             assert(rs.respondsTo("/file"));
         },
 
         "false for different paths": function () {
-            var rs = resource.create("/styles.css", { content: "Yo" });
+            var rs = rr.createResource("/styles.css", { content: "Yo" });
             refute(rs.respondsTo("/"));
         },
 
         "false for partial path match": function () {
-            var rs = resource.create("/styles", { content: "Yo" });
+            var rs = rr.createResource("/styles", { content: "Yo" });
             refute(rs.respondsTo("/styles/page.css"));
         }
     },
 
     "with backend": {
         "content is proxy instance": function () {
-            var rs = resource.create("/api", { backend: "localhost" });
+            var rs = rr.createResource("/api", { backend: "localhost" });
 
             assert.isObject(rs.content());
             assert.isFunction(rs.content().respond);
         },
 
         "content is always same proxy instance": function () {
-            var rs = resource.create("/api", { backend: "localhost" });
+            var rs = rr.createResource("/api", { backend: "localhost" });
 
             assert.same(rs.content(), rs.content());
         },
 
         "defaults port to 80": function () {
-            var rs = resource.create("/api", { backend: "localhost" });
+            var rs = rr.createResource("/api", { backend: "localhost" });
 
             assert.equals(rs.content().port, 80);
         },
 
         "defaults path to nothing": function () {
-            var rs = resource.create("/api", { backend: "localhost" });
+            var rs = rr.createResource("/api", { backend: "localhost" });
 
             assert.equals(rs.content().path, "");
         },
 
         "overrides default port": function () {
-            var rs = resource.create("/api", { backend: "localhost:79" });
+            var rs = rr.createResource("/api", { backend: "localhost:79" });
 
             assert.equals(rs.content().port, 79);
         },
 
         "overrides default path": function () {
-            var rs = resource.create("/api", { backend: "localhost/yep" });
+            var rs = rr.createResource("/api", { backend: "localhost/yep" });
 
             assert.equals(rs.content().path, "/yep");
             assert.equals(rs.content().getProxyPath(), "/api");
         },
 
         "uses full URL": function () {
-            var rs = resource.create("/api", {
+            var rs = rr.createResource("/api", {
                 backend: "http://something:8080/crowd/"
             });
 
@@ -289,7 +289,7 @@ buster.testCase("Resources", {
 
         "respondsTo": {
             setUp: function () {
-                this.rs = resource.create("/api", { backend: "localhost" });
+                this.rs = rr.createResource("/api", { backend: "localhost" });
             },
 
             "responds to requests for root path": function () {
@@ -308,7 +308,7 @@ buster.testCase("Resources", {
 
     "with function content": {
         "resolves with content function return value": function (done) {
-            var rs = resource.create("/api", { content: function () {
+            var rs = rr.createResource("/api", { content: function () {
                 return "42";
             } });
 
@@ -317,7 +317,7 @@ buster.testCase("Resources", {
 
         "resolves content() when function promise resolves": function (done) {
             var d = when.defer();
-            var rs = resource.create("/api", { content: function () {
+            var rs = rr.createResource("/api", { content: function () {
                 return d.promise;
             } });
 
@@ -327,7 +327,7 @@ buster.testCase("Resources", {
 
         "rejects content() when function promise rejects": function (done) {
             var d = when.defer();
-            var rs = resource.create("/api", { content: function () {
+            var rs = rr.createResource("/api", { content: function () {
                 return d.promise;
             } });
 
@@ -339,7 +339,7 @@ buster.testCase("Resources", {
 
         "calls content function with resource as this": function () {
             var content = this.spy();
-            var rs = resource.create("/api", { content: content });
+            var rs = rr.createResource("/api", { content: content });
 
             rs.content();
 
@@ -350,7 +350,7 @@ buster.testCase("Resources", {
 
     "with fully qualified url as path": {
         "content is path": function (done) {
-            var rs = resource.create("file:///tmp/trash.txt");
+            var rs = rr.createResource("file:///tmp/trash.txt");
 
             rs.content().then(done(function (content) {
                 assert.equals(content, "file:///tmp/trash.txt");
@@ -360,17 +360,17 @@ buster.testCase("Resources", {
 
     "getContentFor": {
         "returns self for own MIME type": function () {
-            var res = resource.create("/meh", { content: "Content" });
+            var res = rr.createResource("/meh", { content: "Content" });
             assert.same(res.getContentFor("text/html"), res);
         },
 
         "returns null for unrecognized MIME type": function () {
-            var res = resource.create("/meh", { content: "Content" });
+            var res = rr.createResource("/meh", { content: "Content" });
             refute(res.getContentFor("text/css"));
         },
 
         "returns alternative with desired MIME type": function () {
-            var res = resource.create("/meh", { content: "Content" });
+            var res = rr.createResource("/meh", { content: "Content" });
             res.addAlternative({ mimeType: "text/css", content: "body {}" });
             assert(res.getContentFor("text/css"));
         }
@@ -378,7 +378,7 @@ buster.testCase("Resources", {
 
     "processors": {
         "process content": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Hey"
             });
 
@@ -390,7 +390,7 @@ buster.testCase("Resources", {
         },
 
         "process content in a chain": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Hey"
             });
 
@@ -405,7 +405,7 @@ buster.testCase("Resources", {
         },
 
         "processes deferred content": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: function () { return "42"; }
             });
 
@@ -420,7 +420,7 @@ buster.testCase("Resources", {
         },
 
         "leaves content untouched if returns undefined": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: function () { return "42"; }
             });
 
@@ -430,7 +430,7 @@ buster.testCase("Resources", {
         },
 
         "blanks content by returning blank string": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: function () { return "42"; }
             });
 
@@ -440,7 +440,7 @@ buster.testCase("Resources", {
         },
 
         "rejects if string content processor throws": function (done) {
-            var rs = resource.create("/path", { content: "Hey" });
+            var rs = rr.createResource("/path", { content: "Hey" });
             rs.addProcessor(function () { throw new Error("Process fail"); });
 
             rs.content().then(done(function () {
@@ -451,7 +451,7 @@ buster.testCase("Resources", {
         },
 
         "rejects if function content processor throws": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: this.stub().returns("Hey")
             });
             rs.addProcessor(function () { throw new Error("Process fail"); });
@@ -464,7 +464,7 @@ buster.testCase("Resources", {
         },
 
         "creates etag hash": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: "Hey"
             });
 
@@ -474,7 +474,7 @@ buster.testCase("Resources", {
         },
 
         "updates existing etag": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 etag: "123",
                 content: "Hey"
             });
@@ -485,7 +485,7 @@ buster.testCase("Resources", {
         },
 
         "always update existing etag": function () {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 etag: "123",
                 content: "Hey"
             });
@@ -497,7 +497,7 @@ buster.testCase("Resources", {
         },
 
         "does not process content for alternatives": function (done) {
-            var rs = resource.create("/path", { content: "Hey" });
+            var rs = rr.createResource("/path", { content: "Hey" });
             rs.addAlternative({ content: "Haha", mimeType: "text/css" });
 
             rs.addProcessor(function (resource, content) {
@@ -511,7 +511,7 @@ buster.testCase("Resources", {
     "process": {
         setUp: function () {
             this.content = this.stub().returns("Something");
-            this.rs = resource.create("/path", { content: this.content });
+            this.rs = rr.createResource("/path", { content: this.content });
         },
 
         "does not resolve content if no processors": function (done) {
@@ -556,7 +556,7 @@ buster.testCase("Resources", {
 
     "enclose": {
         "wraps content in an iife": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: this.stub().returns("var a = 42;"),
                 enclose: true
             });
@@ -567,7 +567,7 @@ buster.testCase("Resources", {
         },
 
         "adds exports to iife": function (done) {
-            var rs = resource.create("/path", {
+            var rs = rr.createResource("/path", {
                 content: this.stub().returns("var a = 42;"),
                 enclose: true,
                 exports: ["a"]
@@ -583,7 +583,7 @@ buster.testCase("Resources", {
         "fails if content rejects": function (done) {
             var d = when.defer();
             d.resolver.reject("MEH");
-            var res = resource.create("/meh", {
+            var res = rr.createResource("/meh", {
                 content: function () { return d.promise; }
             });
 
@@ -594,7 +594,7 @@ buster.testCase("Resources", {
         },
 
         "fails if content throws": function (done) {
-            var res = resource.create("/meh", {
+            var res = rr.createResource("/meh", {
                 content: function () { throw new Error("MEH"); }
             });
 
@@ -605,7 +605,7 @@ buster.testCase("Resources", {
         },
 
         "includes enclose property if true": function (done) {
-            var res = resource.create("/meh", {
+            var res = rr.createResource("/meh", {
                 content: "Hey",
                 enclose: true
             });
@@ -616,7 +616,7 @@ buster.testCase("Resources", {
         },
 
         "includes exports if set": function (done) {
-            var res = resource.create("/meh", {
+            var res = rr.createResource("/meh", {
                 content: "Hey",
                 enclose: true,
                 exports: ["a", "b"]
@@ -628,7 +628,7 @@ buster.testCase("Resources", {
         },
 
         "fails if content processor throws": function (done) {
-            var res = resource.create("/meh", {
+            var res = rr.createResource("/meh", {
                 content: function () { return "Content"; }
             });
 
@@ -641,7 +641,7 @@ buster.testCase("Resources", {
         },
 
         "includes cacheable flag": function (done) {
-            var res = resource.create("/meh", {
+            var res = rr.createResource("/meh", {
                 content: function () { return "Content"; }
             });
 
@@ -651,7 +651,7 @@ buster.testCase("Resources", {
         },
 
         "includes alternatives": function (done) {
-            var res = resource.create("/meh", { content: "Content" });
+            var res = rr.createResource("/meh", { content: "Content" });
             res.addAlternative({
                 content: "CONTENT",
                 mimeType: "text/uppercase"
@@ -666,7 +666,7 @@ buster.testCase("Resources", {
         },
 
         "does not include alternatives when skipping content": function (done) {
-            var res = resource.create("/meh", { content: "Content" });
+            var res = rr.createResource("/meh", { content: "Content" });
             res.addAlternative({
                 content: "CONTENT",
                 mimeType: "text/uppercase"
@@ -679,7 +679,7 @@ buster.testCase("Resources", {
         },
 
         "does not include content for fully qualified path": function (done) {
-            var res = resource.create("http://cdn/thing.js");
+            var res = rr.createResource("http://cdn/thing.js");
 
             res.serialize({ includeContent: false }).then(done(function (s) {
                 refute(s.content);
@@ -690,7 +690,7 @@ buster.testCase("Resources", {
 
     "addAlternative": {
         "updates etag": function () {
-            var res = resource.create("/meh", { content: "Ok", etag: "1" });
+            var res = rr.createResource("/meh", { content: "Ok", etag: "1" });
             res.addAlternative({
                 content: "CONTENT",
                 mimeType: "text/uppercase"
@@ -700,7 +700,7 @@ buster.testCase("Resources", {
         },
 
         "updates etag for every additional mime type alternative": function () {
-            var res = resource.create("/meh", { content: "Ok", etag: "1" });
+            var res = rr.createResource("/meh", { content: "Ok", etag: "1" });
             res.addAlternative({ content: "CONTENT", mimeType: "text/upcase" });
             res.addAlternative({ content: "CONTENT", mimeType: "text/locase" });
 
@@ -708,7 +708,7 @@ buster.testCase("Resources", {
         },
 
         "does not update etag when overriding existing alternative": function () {
-            var res = resource.create("/meh", { content: "Ok", etag: "1" });
+            var res = rr.createResource("/meh", { content: "Ok", etag: "1" });
             res.addAlternative({ content: "CONTENT", mimeType: "text/upcase" });
             res.addAlternative({ content: "CONTENT", mimeType: "text/locase" });
             res.addAlternative({ content: "OTHER", mimeType: "text/upcase" });
@@ -717,11 +717,11 @@ buster.testCase("Resources", {
         },
 
         "alternative ordering does not affect etag": function () {
-            var res = resource.create("/meh", { content: "Ok" });
+            var res = rr.createResource("/meh", { content: "Ok" });
             res.addAlternative({ content: "A", mimeType: "text/upcase" });
             res.addAlternative({ content: "B", mimeType: "text/locase" });
 
-            var res2 = resource.create("/meh", { content: "Ok" });
+            var res2 = rr.createResource("/meh", { content: "Ok" });
             res2.addAlternative({ content: "A", mimeType: "text/locase" });
             res2.addAlternative({ content: "B", mimeType: "text/upcase" });
 
@@ -729,10 +729,10 @@ buster.testCase("Resources", {
         },
 
         "uses alternative custom etag for etag generation": function () {
-            var res = resource.create("/meh", { content: "Ok" });
+            var res = rr.createResource("/meh", { content: "Ok" });
             res.addAlternative({ content: "A", mimeType: "text/a", etag: "A" });
 
-            var res2 = resource.create("/meh", { content: "Ok" });
+            var res2 = rr.createResource("/meh", { content: "Ok" });
             res2.addAlternative({ content: "A", mimeType: "text/a" });
 
             refute.equals(res.etag, res2.etag);
