@@ -18,7 +18,7 @@ var cache = rr.createCache({ ttl: HOUR, maxSize: 100 * MB });
  * middleware under the provided path
  */
 function mount(payload) {
-    rr.resourceSet.deserialize(payload.resourceSet).then(function (rr) {
+    rr.deserialize(payload.resourceSet).then(function (rr) {
         cache.inflate(rr).then(function (resourceSet) {
             console.log("Mounting resource set at", payload.mountPoint);
             middleware.mount(payload.mountPoint, resourceSet);

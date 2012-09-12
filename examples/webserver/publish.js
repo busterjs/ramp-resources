@@ -61,7 +61,7 @@ var cached, config;
 
 function publish() {
     if (!cached || !config) { return; }
-    var resourceSet = rs.resourceSet.create(__dirname);
+    var resourceSet = rs.createResourceSet(__dirname);
     resourceSet.addResources(config);
     console.log("Built resource set");
     resourceSet.serialize(cached).then(function (serialized) {
