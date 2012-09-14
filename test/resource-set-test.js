@@ -97,7 +97,7 @@ buster.testCase("Resource sets", {
             this.rs.addFileResource(path).then(done(function (resource) {
                 assert.equals(resource.path, "/test/my-testish.js");
             }));
-        },
+        }
     },
 
     "adding processor": {
@@ -232,8 +232,9 @@ buster.testCase("Resource sets", {
             }));
         },
 
-        "uses strict globbing to catch any non-matching pattern": function (done) {
-            this.rs.addResources(["foo.js", "zyng/*.js"]).then(done(function () {
+        "uses strict globbing to catch non-matching pattern": function (done) {
+            var patterns = ["foo.js", "zyng/*.js"];
+            this.rs.addResources(patterns).then(done(function () {
                 assert(false, "Should produce error");
             }), done(function (err) {
                 assert.match(err.message, "zyng/*.js");
@@ -361,21 +362,6 @@ buster.testCase("Resource sets", {
             this.stub(this.resources[0], "process").returns(deferred.promise);
             this.stub(this.resources[1], "process").returns(deferred.promise);
             this.rs.addResources(this.resources);
-        },
-
-        "processes all resources": function (done) {
-            var resources = [rr.createResource("/a.txt", { content: "a" }),
-                             rr.createResource("/b.txt", { content: "b" })];
-            var deferred = when.defer();
-            deferred.resolver.resolve(null);
-            this.stub(resources[0], "process").returns(deferred.promise);
-            this.stub(resources[1], "process").returns(deferred.promise);
-            this.rs.addResources(resources);
-
-            this.rs.process().then(done(function () {
-                assert.calledOnce(resources[0].process);
-                assert.calledOnce(resources[1].process);
-            }));
         },
 
         "processes all resources": function (done) {
@@ -999,14 +985,16 @@ buster.testCase("Resource sets", {
         "fails for non-existent resource": function (done) {
             var paths = ["*.js", "*.txt"];
             this.rs.appendLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "'*.txt' matched no files or resources");
+                assert.match(err.message,
+                             "'*.txt' matched no files or resources");
             }));
         },
 
         "fails for non-existent resource with leading slash": function (done) {
             var paths = ["/*.js", "/*.txt"];
             this.rs.appendLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "'/*.txt' matched no files or resources");
+                assert.match(err.message,
+                             "'/*.txt' matched no files or resources");
             }));
         }
     },
@@ -1073,14 +1061,16 @@ buster.testCase("Resource sets", {
         "fails for non-existent resource": function (done) {
             var paths = ["*.js", "*.txt"];
             this.rs.prependLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "'*.txt' matched no files or resources");
+                assert.match(err.message,
+                             "'*.txt' matched no files or resources");
             }));
         },
 
         "fails for non-existent resource with leading slash": function (done) {
             var paths = ["/*.js", "/*.txt"];
             this.rs.prependLoad(paths).then(done, done(function (err) {
-                assert.match(err.message, "'/*.txt' matched no files or resources");
+                assert.match(err.message,
+                             "'/*.txt' matched no files or resources");
             }));
         }
     },

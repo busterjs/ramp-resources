@@ -537,11 +537,11 @@ buster.testCase("Resources", {
         },
 
         "yields processed content": function (done) {
-            var processor = this.stub().returns("\m/");
+            var processor = this.stub().returns("\\m/");
             this.rs.addProcessor(processor);
 
             this.rs.process().then(done(function (content) {
-                assert.equals(content, "\m/");
+                assert.equals(content, "\\m/");
             }.bind(this)));
         },
 
@@ -562,7 +562,8 @@ buster.testCase("Resources", {
             });
 
             rs.content().then(done(function (content) {
-                assert.equals(content, "(function () {var a = 42;}.call(this));");
+                var expected = "(function () {var a = 42;}.call(this));";
+                assert.equals(content, expected);
             }.bind(this)));
         },
 
@@ -574,7 +575,10 @@ buster.testCase("Resources", {
             });
 
             rs.content().then(done(function (content) {
-                assert.equals(content, "(function (global) {var a = 42;global.a=a;}.call(this, typeof global != \"undefined\" ? global : this));");
+                var context = "(function (global) {var a = 42;global.a=a;}" +
+                              ".call(this, typeof global != \"undefined\" ? " +
+                              "global : this));";
+                assert.equals(content, context);
             }.bind(this)));
         }
     },
@@ -707,7 +711,7 @@ buster.testCase("Resources", {
             assert.equals(res.etag, "dec94ef5d39fff3bc911f4a16409d573238ea497");
         },
 
-        "does not update etag when overriding existing alternative": function () {
+        "does not update etag when overriding existing alt": function () {
             var res = rr.createResource("/meh", { content: "Ok", etag: "1" });
             res.addAlternative({ content: "CONTENT", mimeType: "text/upcase" });
             res.addAlternative({ content: "CONTENT", mimeType: "text/locase" });

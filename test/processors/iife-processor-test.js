@@ -13,9 +13,9 @@ buster.testCase("Processors", {
 
         "wraps content in IIFE": function (done) {
             this.resource.addProcessor(iife());
+            var content = "(function () {var buster = {};}.call(this));";
 
-            assert.content(this.resource,
-                           "(function () {var buster = {};}.call(this));", done);
+            assert.content(this.resource, content, done);
         },
 
         "exports single variable by assigning to global": function (done) {

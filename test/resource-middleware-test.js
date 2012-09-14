@@ -157,7 +157,7 @@ buster.testCase("Resource middleware", {
             });
 
             h.req({ path: "/" }, done(function (req, res, body) {
-                refute.match(body, "{{scripts}}")
+                refute.match(body, "{{scripts}}");
                 assert.match(body, "<html>foo<script");
                 assert.match(body, "src=\"/buster.js\"");
                 assert.match(body, "</script>bar</html>");
@@ -195,7 +195,8 @@ buster.testCase("Resource middleware", {
 
             h.req({ path: "/dabomb" }, done(function (req, res, body) {
                 assert.equals(res.statusCode, 500);
-                assert.match(body, Path.join("test", "resource-middleware-test"));
+                var path = Path.join("test", "resource-middleware-test");
+                assert.match(body, path);
                 assert.match(body, "Damnit");
             })).end();
         },
@@ -646,7 +647,9 @@ buster.testCase("Resource middleware", {
             this.resources.unmount();
             h.req({ path: "/sinon/sinon.js" }, function (req, res, body) {
                 assert.equals(res.statusCode, 418);
-                h.req({ path: "/buster/buster.js" }, done(function (req, res, body) {
+                h.req({
+                    path: "/buster/buster.js"
+                }, done(function (req, res, body) {
                     assert.equals(res.statusCode, 418);
                 })).end();
             }).end();
@@ -744,7 +747,8 @@ buster.testCase("Resource middleware", {
             }, done(function (req, res, body) {
                 assert.equals(res.statusCode, 200);
                 assert.equals(body, "JavaScript");
-                assert.match(res.headers["content-type"], "application/javascript");
+                assert.match(res.headers["content-type"],
+                             "application/javascript");
             })).end();
         },
 
@@ -756,9 +760,11 @@ buster.testCase("Resource middleware", {
             })).end();
         },
 
-        "loads application/javascript mime alternative in load path": function (done) {
+        "loads mime alternative in load path": function (done) {
             h.req({ path: "/" }, done(function (req, res, body) {
-                assert.match(body, "src=\"/sinon.coffee?rampMimeType=application/javascript\"");
+                var context = "src=\"/sinon.coffee?" +
+                        "rampMimeType=application/javascript\"";
+                assert.match(body, context);
             })).end();
         }
     },
@@ -766,7 +772,8 @@ buster.testCase("Resource middleware", {
     "fully qualified resources": {
         setUp: function (done) {
             this.resources = rr.createMiddleware();
-            this.sets.withBuster.addResource("file:///tmp/hey.js").then(function (r) {
+            var p = this.sets.withBuster.addResource("file:///tmp/hey.js");
+            p.then(function (r) {
                 this.sets.withBuster.loadPath.append(r.path);
                 this.resources.mount("/", this.sets.withBuster);
                 this.server = h.createServer(this.resources, done);
