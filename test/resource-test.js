@@ -1,6 +1,7 @@
 var buster = require("buster");
 var when = require("when");
 var rr = require("../lib/ramp-resources");
+var br = require("../lib/resource");
 require("./test-helper.js");
 
 buster.testCase("Resources", {
@@ -740,6 +741,13 @@ buster.testCase("Resources", {
             res2.addAlternative({ content: "A", mimeType: "text/a" });
 
             refute.equals(res.etag, res2.etag);
+        }
+    },
+
+    "normalizePath": {
+        "windows path with more than one path separator": function () {
+            assert.equals(br.normalizePath("test\\other\\1.js"),
+                    "/test/other/1.js");
         }
     }
 });
