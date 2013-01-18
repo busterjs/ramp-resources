@@ -126,6 +126,7 @@ buster.testCase("HTTP proxy", {
         },
 
         "responds with 503 when backend is down": function (done) {
+            this.timeout = 2000;
             this.proxyMiddleware = httpProxy.create("localhost", 2220);
 
             h.req({}, done(function (req, res) {
