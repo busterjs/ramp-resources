@@ -1,10 +1,9 @@
 module.exports = {
     paths: [
-        "lib/*.js",
-        "lib/processors/*.js",
-        "test/*.js",
-        "test/processors/*.js"
+        "lib/**/*.js",
+        "test/**/*.js"
     ],
+    excludes: ["test/fixtures/"],
     linterOptions: {
         node: true,
         plusplus: true,
