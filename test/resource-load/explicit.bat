@@ -1,0 +1,1 @@
+node ../../node_modules/buster/bin/buster-test --config buster-explicit.js
