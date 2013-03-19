@@ -23,7 +23,7 @@
         "url": "https://github.com/busterjs/ramp-resources.git"
     },
     "scripts": {
-        "test": "./node_modules/buster/bin/buster-test"
+        "test": "node run-tests.js"
     },
     "dependencies": {
         "mime": "~1",
