@@ -2,6 +2,10 @@ var B = require("buster");
 var rr = require("../lib/ramp-resources");
 var when = require("when");
 var http = require("http");
+var rmrf = require("rimraf");
+var path = require("path");
+var fs = require("fs");
+var FIXTURES_ROOT = path.resolve(__dirname, "..", ".fixtures");
 
 function verifyResourceError(message, e) {
     if (e.name !== "InvalidResourceError") {
@@ -131,4 +135,44 @@ exports.createProxyBackend = function (port) {
     };
 
     return backend;
+};
+
+exports.FIXTURES_ROOT = FIXTURES_ROOT;
+
+exports.mkdir = function (dir) {
+    dir = dir.replace(FIXTURES_ROOT, "").replace(/^\//, "");
+    var dirs = [FIXTURES_ROOT].concat(dir.split("/")), tmp = "", i, l;
+    for (i = 0, l = dirs.length; i < l; ++i) {
+        if (dirs[i]) {
+            tmp += dirs[i] + "/";
+            try {
+                fs.mkdirSync(tmp, "755");
+            } catch (e) {}
+        }
+    }
+};
+
+exports.writeFile = function (file, contents) {
+    file = path.join(FIXTURES_ROOT, file);
+    this.mkdir(path.dirname(file));
+    fs.writeFileSync(file, contents);
+    return file;
+};
+
+exports.cdFixtures = function () {
+    this.mkdir("");
+    process.chdir(FIXTURES_ROOT);
+};
+
+exports.clearFixtures = function (done) {
+    var mod;
+    for (mod in require.cache) {
+        if (/fixtures/.test(mod)) {
+            delete require.cache[mod];
+        }
+    }
+    rmrf(FIXTURES_ROOT, function (err) {
+        if (err) { require("buster").log(err.toString()); }
+        done();
+    });
 };

@@ -33,6 +33,7 @@
         "lodash": "~0.5"
     },
     "devDependencies": {
-        "buster": "0.6.11"
+        "buster": "0.6.11",
+        "rimraf": "~1"
     }
 }
