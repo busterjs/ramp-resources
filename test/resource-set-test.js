@@ -264,7 +264,8 @@ buster.testCase("Resource sets", {
                 assert.match(err, Path.join("..", "resource-test.js"));
                 assert.match(err, "outside the project root");
                 assert.match(err, "set rootPath to the desired root");
-                assert.match(err, rs.rootPath, "should mention actual root path");
+                assert.match(err, rs.rootPath,
+                    "should mention actual root path");
             };
             rs.addResource("../resource-test.js").then(noop, done(verify));
         }
