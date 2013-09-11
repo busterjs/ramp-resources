@@ -10,6 +10,7 @@ buster.testRunner.onCreate(function (runner) {
     });
 });
 
+require("./test/file-test");
 require("./test/http-proxy-test");
 require("./test/load-path-test");
 require("./test/processors/iife-processor-test");
