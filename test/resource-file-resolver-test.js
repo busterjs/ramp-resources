@@ -27,6 +27,19 @@ buster.testCase("resource file resolver", {
                     assert.match(matches, "some-tests.js");
                     assert.match(matches, "some-more-tests.js");
                 }));
+        },
+
+        "excludes specified files": function (done) {
+
+            testHelper.writeFile("some-tests.js", "");
+            testHelper.writeFile("some-more-tests.js", "");
+
+            testee.resolvePaths(this.rs, ["some*.js", "!*more*.js"],
+                done(function (err, matches) {
+
+                    assert.equals(matches.length, 1);
+                    assert.match(matches, "some-tests.js");
+                }));
         }
     }
 });
