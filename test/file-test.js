@@ -1,4 +1,6 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.assert;
+var refute = buster.refute;
 var testHelper = require("./test-helper");
 var file = require("../lib/file");
 

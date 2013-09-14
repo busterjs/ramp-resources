@@ -1,4 +1,4 @@
-var B = require("buster");
+var B = require("buster-node");
 var rr = require("../lib/ramp-resources");
 var when = require("when");
 var http = require("http");
@@ -6,6 +6,17 @@ var rmrf = require("rimraf");
 var path = require("path");
 var fs = require("fs");
 var FIXTURES_ROOT = path.resolve(__dirname, "..", ".fixtures");
+var samsam = require("samsam");
+
+function extend() {
+    var target = {};
+    for (var i = 0, l = arguments.length; i < l; ++i) {
+        for (var prop in arguments[i]) {
+            target[prop] = arguments[i][prop];
+        }
+    }
+    return target;
+}
 
 function verifyResourceError(message, e) {
     if (e.name !== "InvalidResourceError") {
@@ -19,7 +30,7 @@ function verifyResourceError(message, e) {
     return true;
 }
 
-B.assertions.add("invalidResource", {
+B.referee.add("invalidResource", {
     assert: function (path, res, message) {
         try {
             if (typeof path === "string") {
@@ -39,24 +50,24 @@ B.assertions.add("invalidResource", {
     assertMessage: "Expected to fail"
 });
 
-B.assertions.add("content", {
+B.referee.add("content", {
     assert: function (resource, expected, done) {
         resource.content().then(done(function (actual) {
             assert.same(actual, expected);
         }), done(function (err) {
-            buster.log(err.stack);
-            B.assertions.fail("content() rejected");
+            console.log(err.stack);
+            B.referee.fail("content() rejected");
         }));
         return true;
     }
 });
 
-B.assertions.add("resourceEqual", {
+B.referee.add("resourceEqual", {
     assert: function (res1, res2, done) {
         var equal = res1.path === res2.path &&
             res1.etag === res2.etag &&
             res1.encoding === res2.encoding &&
-            B.assertions.deepEqual(res1.headers(), res2.headers());
+            samsam.deepEqual(res1.headers(), res2.headers());
         if (!equal) { return false; }
 
         when.all([res1.content(), res2.content()]).then(function (contents) {
@@ -79,7 +90,7 @@ exports.req = function (opt, callback) {
     opt = opt || {};
     var encoding = opt.encoding || "utf-8";
     delete opt.encoding;
-    var req = http.request(buster.extend({
+    var req = http.request(extend({
         method: "GET",
         host: "localhost",
         port: 2233

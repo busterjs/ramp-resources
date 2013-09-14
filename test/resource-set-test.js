@@ -1,4 +1,6 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.assert;
+var refute = buster.refute;
 var rr = require("../lib/ramp-resources");
 var Path = require("path");
 var when = require("when");
@@ -9,6 +11,12 @@ var logStack = function (err) {
     var message = (err && err.stack) || err.message;
     if (message) { buster.log(message); }
 };
+
+function countdown(num, done) {
+    return function () {
+        if (--num == 0) done();
+    };
+}
 
 buster.testCase("Resource sets", {
     setUp: function () {
@@ -768,16 +776,16 @@ buster.testCase("Resource sets", {
         "deserializes serialized resource set": function (done) {
             var rs = rr.createResourceSet(FIXTURE_DIR);
             rs.addResources(["foo.js", "bar.js"]);
-            var cb = buster.countdown(2, done);
+            var cb = countdown(2, done);
             rs.serialize().then(function (serialized) {
-                rr.deserialize(serialized).then(function (rs2) {
+                rr.deserialize(serialized).then(done(function (rs2) {
                     assert.equals(rs.length, rs2.length);
                     assert.equals(rs.loadPath.paths, rs.loadPath.paths);
                     assert.resourceEqual(rs.get("/foo.js"),
                                          rs2.get("/foo.js"), cb);
                     assert.resourceEqual(rs.get("/bar.js"),
                                          rs2.get("/bar.js"), cb);
-                });
+                }));
             });
         },
 
@@ -843,7 +851,7 @@ buster.testCase("Resource sets", {
 
             when.all([add1, add2, add3]).then(done(function () {
                 var rs4 = rs1.concat(rs2, rs3);
-                var cb = buster.countdown(3, done);
+                var cb = countdown(3, done);
 
                 assert.content(rs4.get("/buster.js"), "Ok", cb);
                 assert.content(rs4.get("/sinon.js"), "Nok", cb);
@@ -970,7 +978,7 @@ buster.testCase("Resource sets", {
         "adds non-existing resources": function (done) {
             var rs = this.rs;
             rs.appendLoad("*.js").then(function (lp) {
-                var cb = buster.countdown(2, done);
+                var cb = countdown(2, done);
                 assert.equals(lp.paths(), ["/bar.js", "/foo.js", "/buster.js"]);
                 assert.content(rs.get("/bar.js"), "var helloFromBar = 1;", cb);
                 assert.content(rs.get("/foo.js"), "var thisIsTheFoo = 5;", cb);
@@ -1045,7 +1053,7 @@ buster.testCase("Resource sets", {
         "adds non-existing resources": function (done) {
             var rs = this.rs;
             rs.prependLoad("*.js").then(function (lp) {
-                var cb = buster.countdown(2, done);
+                var cb = countdown(2, done);
                 assert.equals(lp.paths(), ["/bar.js", "/foo.js", "/buster.js"]);
                 assert.content(rs.get("/bar.js"), "var helloFromBar = 1;", cb);
                 assert.content(rs.get("/foo.js"), "var thisIsTheFoo = 5;", cb);

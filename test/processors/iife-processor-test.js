@@ -1,4 +1,5 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.referee.assert;
 var rr = require("../../lib/ramp-resources");
 var iife = require("../../lib/processors/iife");
 require("../test-helper");

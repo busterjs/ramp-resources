@@ -1,4 +1,6 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.assert;
+var refute = buster.refute;
 var when = require("when");
 var Path = require("path");
 var rr = require("../lib/ramp-resources");
@@ -33,8 +35,14 @@ function proxySetUp(options) {
     };
 }
 
+function countdown(num, done) {
+    return function () {
+        if (--num == 0) done();
+    };
+}
+
 function proxyTearDown(done) {
-    var cb = buster.countdown(2, done);
+    var cb = countdown(2, done);
     this.backend.close(cb);
     h.serverTearDown.call(this, cb);
 }

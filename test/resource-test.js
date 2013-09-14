@@ -1,4 +1,6 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.assert;
+var refute = buster.refute;
 var when = require("when");
 var rr = require("../lib/ramp-resources");
 var br = require("../lib/resource");
@@ -76,7 +78,7 @@ buster.testCase("Resources", {
                 content: "Hey",
                 headers: {
                     "Content-Type": "application/xhtml",
-                    "Content-Length": 3
+                    "Content-Length": "3"
                 }
             });
 
@@ -266,7 +268,7 @@ buster.testCase("Resources", {
         "overrides default port": function () {
             var rs = rr.createResource("/api", { backend: "localhost:79" });
 
-            assert.equals(rs.content().port, 79);
+            assert.equals(rs.content().port, "79");
         },
 
         "overrides default path": function () {
@@ -283,7 +285,7 @@ buster.testCase("Resources", {
 
             assert.match(rs.content(), {
                 host: "something",
-                port: 8080,
+                port: "8080",
                 path: "/crowd"
             });
         },

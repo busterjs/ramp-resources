@@ -1,7 +1,15 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.assert;
+var refute = buster.refute;
 var http = require("http");
 var httpProxy = require("../lib/http-proxy");
 var h = require("./test-helper");
+
+function countdown(num, done) {
+    return function () {
+        if (--num == 0) done();
+    };
+}
 
 buster.testCase("HTTP proxy", {
     setUp: function (done) {
@@ -17,7 +25,7 @@ buster.testCase("HTTP proxy", {
     },
 
     tearDown: function (done) {
-        var cb = buster.countdown(2, done);
+        var cb = countdown(2, done);
         this.backend.close(cb);
         this.proxy.on("close", cb);
         this.proxy.close();

@@ -1,13 +1,13 @@
-var buster = require("buster");
+var buster = require("buster-node");
+var assert = buster.assert;
 var when = require("when");
 var rr = require("../lib/ramp-resources");
 require("./test-helper");
 
 function add(rs, path, content, options) {
-    return rs.addResource(buster.extend({
-        path: path,
-        content: content
-    }, options));
+    options.path = options.path || path;
+    options.content = options.content || content;
+    return rs.addResource(options);
 }
 
 function addResourcesAndInflate(cache, resourceSet, resources, done) {
