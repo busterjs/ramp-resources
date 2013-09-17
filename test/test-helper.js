@@ -53,7 +53,7 @@ B.referee.add("invalidResource", {
 B.referee.add("content", {
     assert: function (resource, expected, done) {
         resource.content().then(done(function (actual) {
-            assert.same(actual, expected);
+            B.referee.assert.same(actual, expected);
         }), done(function (err) {
             console.log(err.stack);
             B.referee.fail("content() rejected");
@@ -187,3 +187,5 @@ exports.clearFixtures = function (done) {
         done();
     });
 };
+
+exports.referee = B.referee;

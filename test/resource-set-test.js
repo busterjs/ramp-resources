@@ -354,7 +354,7 @@ buster.testCase("Resource sets", {
                 resource.addProcessor(function (resource, content) {
                     return "function () {" + content + "}";
                 });
-                this.rs.concat().then(done(function (rs) {
+                this.rs.concat().whenAllAdded(done(function (rs) {
                     var concat = "function () {var thisIsTheFoo = 5;}";
                     assert.content(rs.get("/buster.js"), concat, done);
                 }), done(logStack));
@@ -905,7 +905,7 @@ buster.testCase("Resource sets", {
                 { path: "/b", content: "2" },
                 { path: "/c", combine: ["/a", "/b"] }
             ]).then(function () {
-                rs1.concat().then(done(function (rs) {
+                rs1.concat().whenAllAdded(done(function (rs) {
                     assert.defined(rs.get("/c"));
                     assert.equals(rs.get("/c").combine, ["/a", "/b"]);
                 }));
@@ -1086,7 +1086,7 @@ buster.testCase("Resource sets", {
         }
     },
 
-    "then": {
+    "whenAllAdded": {
         setUp: function () {
             this.rs = rr.createResourceSet(FIXTURE_DIR);
         },
@@ -1095,7 +1095,7 @@ buster.testCase("Resource sets", {
             this.rs.addResource("foo.js");
             this.rs.addResource("bar.js");
 
-            this.rs.then(done(function () {
+            this.rs.whenAllAdded(done(function () {
                 assert.equals(this.rs.length, 2);
             }.bind(this)), logStack(done));
         },
@@ -1104,7 +1104,7 @@ buster.testCase("Resource sets", {
             this.rs.addResource("foo.js");
             this.rs.addResource("bar.js");
 
-            this.rs.then(done(function (rs) {
+            this.rs.whenAllAdded(done(function (rs) {
                 assert.same(this.rs, rs);
             }.bind(this)), logStack(done));
         }

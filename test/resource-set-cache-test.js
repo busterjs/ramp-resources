@@ -1,8 +1,7 @@
 var buster = require("buster-node");
-var assert = buster.assert;
 var when = require("when");
 var rr = require("../lib/ramp-resources");
-require("./test-helper");
+var assert = require("./test-helper").referee.assert;
 
 function add(rs, path, content, options) {
     options.path = options.path || path;
