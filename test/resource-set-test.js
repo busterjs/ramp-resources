@@ -1,6 +1,7 @@
 var buster = require("buster-node");
 var assert = buster.assert;
 var refute = buster.refute;
+var fail = buster.referee.fail;
 var rr = require("../lib/ramp-resources");
 var Path = require("path");
 var when = require("when");
@@ -14,7 +15,9 @@ var logStack = function (err) {
 
 function countdown(num, done) {
     return function () {
-        if (--num == 0) done();
+        if (--num === 0) {
+            done();
+        }
     };
 }
 
@@ -1007,6 +1010,13 @@ buster.testCase("Resource sets", {
                 assert.match(err.message,
                              "'/*.txt' matched no files or resources");
             }));
+        },
+
+        "does not fail for unmatched exclude pattern": function (done) {
+            var paths = ["*.js", "!some-test.js"];
+            this.rs.appendLoad(paths).then(done(assert), done(function () {
+                fail("error callback should not be called!");
+            }));
         }
     },
 
@@ -1082,6 +1092,13 @@ buster.testCase("Resource sets", {
             this.rs.prependLoad(paths).then(done, done(function (err) {
                 assert.match(err.message,
                              "'/*.txt' matched no files or resources");
+            }));
+        },
+
+        "does not fail for unmatched exclude pattern": function (done) {
+            var paths = ["*.js", "!some-test.js"];
+            this.rs.prependLoad(paths).then(done(assert), done(function () {
+                fail("error callback should not be called!");
             }));
         }
     },
