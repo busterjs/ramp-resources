@@ -1125,5 +1125,14 @@ buster.testCase("Resource sets", {
                 assert.same(this.rs, rs);
             }.bind(this)), logStack(done));
         }
+    },
+
+    "plain resource": {
+        "should be added synchronously": function () {
+            this.rs.add({path: "/foo.js", content: "5 + 5"});
+            var r = this.rs.get("/foo.js");
+            assert(r);
+            assert.equals(r.path, "/foo.js");
+        }
     }
 });
