@@ -38,7 +38,7 @@
     },
     "devDependencies": {
         "rimraf": "~1",
-        "buster": "*",
+        "buster-node": "*",
         "samsam": "*"
     }
 }
