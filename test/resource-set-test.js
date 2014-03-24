@@ -10,7 +10,7 @@ var FIXTURE_DIR = Path.join(__dirname, "fixtures");
 var noop = function () {};
 var logStack = function (err) {
     var message = (err && err.stack) || err.message;
-    if (message) { buster.log(message); }
+    if (message) { console.log(message); }
 };
 
 function countdown(num, done) {
@@ -227,31 +227,6 @@ buster.testCase("Resource sets", {
             }), done(logStack));
         },
 
-        "uses strict globbing": function (done) {
-            this.rs.addResource("zyng.js").then(done(function () {
-                assert(false, "Should produce error");
-            }), done(function (err) {
-                assert.match(err.message, "zyng.js");
-            }));
-        },
-
-        "uses strict globbing with multiple patterns": function (done) {
-            this.rs.addResources(["zyng.js"]).then(done(function () {
-                assert(false, "Should produce error");
-            }), done(function (err) {
-                assert.match(err.message, "zyng.js");
-            }));
-        },
-
-        "uses strict globbing to catch non-matching pattern": function (done) {
-            var patterns = ["foo.js", "zyng/*.js"];
-            this.rs.addResources(patterns).then(done(function () {
-                assert(false, "Should produce error");
-            }), done(function (err) {
-                assert.match(err.message, "zyng/*.js");
-            }));
-        },
-
         "adds resource from glob pattern and file path": function (done) {
             this.rs.rootPath = Path.join(FIXTURE_DIR, "other-test");
             var patterns = ["some-test.js", "*-test.js"];
@@ -279,6 +254,15 @@ buster.testCase("Resource sets", {
                     "should mention actual root path");
             };
             rs.addResource("../resource-test.js").then(noop, done(verify));
+        },
+
+        "exclude resource": function (done) {
+            this.rs.rootPath = Path.join(FIXTURE_DIR, "other-test");
+            var patterns = ["*.js", "!other.js"];
+            this.rs.addResources(patterns).then(done(function (rs) {
+                assert.equals(this.rs.length, 1);
+                assert.equals(this.rs[0].path, "/some-test.js");
+            }.bind(this)), done(logStack));
         }
     },
 
@@ -345,7 +329,7 @@ buster.testCase("Resource sets", {
                 { path: "baz.js", combine: ["/foo.js", "/bar.js"] }
             ]).then(function (resources) {
                 var concat = "var thisIsTheFoo = 5;var helloFromBar = 1;";
-                assert.content(resources[2], concat, done);
+                assert.content(resources[1], concat, done);
             }, done(logStack));
         },
 
