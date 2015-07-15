@@ -21,6 +21,7 @@
         "email": "stein.magnus@jodal.no",
         "url": "http://jodal.no"
     }],
+    "license": "BSD-3-Clause",
     "main": "./lib/ramp-resources",
     "repository": {
         "type": "git",
