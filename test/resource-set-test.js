@@ -42,45 +42,45 @@ buster.testCase("Resource sets", {
         "fails if resource is falsy": function () {
             var msg = "Resource must be a string, a resource object or " +
                 "an object of resource properties";
-            assert.invalidResource(this.rs, null, msg);
+            return assert.invalidResource(this.rs, null, msg);
         },
 
         "fails with both file and backend": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 file: "something.js",
                 backend: "http://localhost:8080"
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails with both file and combine": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 file: "something.js",
                 combine: ["/a.js", "/b.js"]
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails with both content and combine": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 content: "Something",
                 combine: ["/a.js", "/b.js"]
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails with both backend and combine": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 backend: "http://localhost",
                 combine: ["/a.js", "/b.js"]
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails without path": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 content: "Hey"
             }, "Resource must have path");
         },
 
         "fails without content": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 path: "/here"
             }, "No content");
         },
@@ -93,7 +93,7 @@ buster.testCase("Resource sets", {
 
         "does not fail with only file": function () {
             refute.exception(function () {
-                this.rs.addResource({ path: "/path", file: "fixtures/foo.js" });
+                this.rs.addResource({ path: "/path", file: "foo.js" });
             }.bind(this));
         },
 
@@ -148,13 +148,13 @@ buster.testCase("Resource sets", {
         },
 
         "returns promise": function () {
-            assert(when.isPromise(this.rs.addResource(this.resource)));
+            assert.isFunction(this.rs.addResource(this.resource).then);
         },
 
-        "resolves promise with resource": function (done) {
-            this.rs.addResource(this.resource).then(done(function (rs) {
+        "resolves promise with resource": function () {
+            return this.rs.addResource(this.resource).then(function (rs) {
                 assert.equals(this.resource, rs);
-            }.bind(this)));
+            }.bind(this));
         }
     },
 

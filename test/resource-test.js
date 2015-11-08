@@ -9,29 +9,29 @@ require("./test-helper.js");
 buster.testCase("Resources", {
     "create": {
         "fails without resource": function () {
-            assert.invalidResource("/here", null, "No content");
+            return assert.invalidResource("/here", null, "No content");
         },
 
         "fails without content, or backend": function () {
-            assert.invalidResource("/here", {}, "No content");
+            return assert.invalidResource("/here", {}, "No content");
         },
 
         "fails with both content and backend": function () {
-            assert.invalidResource("/here", {
+            return assert.invalidResource("/here", {
                 content: "Something",
                 backend: "http://localhost:8080"
             }, "Resource cannot have both content and backend");
         },
 
         "fails with encoding and backend": function () {
-            assert.invalidResource("/here", {
+            return assert.invalidResource("/here", {
                 encoding: "utf-8",
                 backend: "http://localhost:8080"
             }, "Proxy resource cannot have hard-coded encoding");
         },
 
         "fails with invalid backend URL": function () {
-            assert.invalidResource("/here", {
+            return assert.invalidResource("/here", {
                 backend: "::/::localhost"
             }, "Invalid proxy backend '::/::localhost'");
         },

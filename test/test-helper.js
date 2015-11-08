@@ -35,16 +35,15 @@ B.referee.add("invalidResource", {
         try {
             if (typeof path === "string") {
                 rr.createResource(path, res);
-                return false;
+                return when.resolve(false);
             } else {
-                var ret;
-                path.addResource(res).then(function () {}, function (err) {
-                    ret = verifyResourceError(message, err);
-                });
-                return ret;
+                return path.addResource(res)
+                    .then(function () {}, function (err) {
+                        return verifyResourceError(message, err);
+                    });
             }
         } catch (e) {
-            return verifyResourceError(message, e);
+            return when.resolve(verifyResourceError(message, e));
         }
     },
     assertMessage: "Expected to fail"
@@ -71,7 +70,7 @@ B.referee.add("resourceEqual", {
         if (!equal) { return false; }
 
         when.all([res1.content(), res2.content()]).then(function (contents) {
-            assert.equals(contents[0], contents[1]);
+            B.referee.assert.equals(contents[0], contents[1]);
             done();
         });
         return true;
