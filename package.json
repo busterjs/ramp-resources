@@ -37,7 +37,7 @@
     "dependencies": {
         "mime": "1.x",
         "glob": "5.x",
-        "when": "1.x",
+        "when": "3.x",
         "minimatch": "3.x",
         "lodash": "3.x"
     },
