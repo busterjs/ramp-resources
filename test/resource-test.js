@@ -319,35 +319,38 @@ buster.testCase("Resources", {
         },
 
         "resolves content() when function promise resolves": function (done) {
-            var d = when.defer();
             var rs = rr.createResource("/api", { content: function () {
-                return d.promise;
+                return when.resolve("OMG");
             } });
-
-            d.resolver.resolve("OMG");
             assert.content(rs, "OMG", done);
         },
 
         "rejects content() when function promise rejects": function (done) {
-            var d = when.defer();
             var rs = rr.createResource("/api", { content: function () {
-                return d.promise;
+                return when.reject("OMG");
             } });
 
-            d.resolver.reject("OMG");
             rs.content().then(function () {}, done(function (err) {
                 assert.equals(err, "OMG");
             }));
         },
 
         "calls content function with resource as this": function () {
-            var content = this.spy();
+            var content = this.stub().returns("Some content");
             var rs = rr.createResource("/api", { content: content });
 
-            rs.content();
+            return rs.content().then(function () {
+                assert.calledOnce(content);
+                assert.calledOn(content, rs);
+            });
+        },
 
-            assert.calledOnce(content);
-            assert.calledOn(content, rs);
+        "rejects when function returns undefined": function () {
+            var rs = rr.createResource("/api", {content: this.spy()});
+
+            return rs.content().catch(function (e) {
+                refute.isNull(e);
+            });
         }
     },
 

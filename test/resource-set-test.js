@@ -86,28 +86,33 @@ buster.testCase("Resource sets", {
         },
 
         "does not fail with only combine": function () {
-            refute.exception(function () {
-                this.rs.addResource({ path: "/path", combine: ["/a.js"] });
-            }.bind(this));
+            return this.rs.addResource("foo.js") // must add foo, before it can be combined
+                .then(function () {
+                    return this.rs.addResource({ path: "/path", combine: ["foo.js"] })
+                }.bind(this))
+                .catch(function (e) {
+                    console.trace(e);
+                    throw e;
+                })
+                .catch(this.mock().never());
         },
 
         "does not fail with only file": function () {
-            refute.exception(function () {
-                this.rs.addResource({ path: "/path", file: "foo.js" });
-            }.bind(this));
+            return this.rs.addResource({ path: "/path", file: "foo.js" })
+                .catch(this.mock().never());
         },
 
         "does not fail with only etag": function () {
-            refute.exception(function () {
-                this.rs.addResource({ path: "/path", etag: "abcd" });
-            }.bind(this));
+            return this.rs.addResource({ path: "/path", etag: "abcd" })
+                .catch(this.mock().never());
         },
 
-        "is gettable with URL path when added as system path": function (done) {
+        "is gettable with URL path when added as system path": function () {
             var path = Path.join("test", "my-testish.js");
-            this.rs.addFileResource(path).then(done(function (resource) {
-                assert.equals(resource.path, "/test/my-testish.js");
-            }));
+            return this.rs.addFileResource(path)
+                .then(function (resource) {
+                    assert.equals(resource.path, "/test/my-testish.js");
+                });
         }
     },
 
