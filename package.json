@@ -1,49 +1,56 @@
 {
-    "name": "ramp-resources",
-    "version": "1.0.5",
-    "description": "Virtual file systems for exposing files and other resources on e.g. web servers",
-    "homepage": "http://busterjs.org/docs/resources",
-    "author": { "name": "August Lilleaas" },
-    "contributors": [{
-        "name": "August Lilleaas",
-        "email": "august.lilleaas@gmail.com",
-        "url": "http://augustl.com"
-    }, {
-        "name": "Christian Johansen",
-        "email": "christian@cjohansen.no",
-        "url": "http://cjohansen.no"
-    }, {
-        "name": "Daniel Wittner",
-        "email": "d.wittner@gmx.de",
-        "url": "https://github.com/dwittner"
-    }, {
-        "name": "Stein Magnus Jodal",
-        "email": "stein.magnus@jodal.no",
-        "url": "http://jodal.no"
-    }],
-    "license": "BSD-3-Clause",
-    "main": "./lib/ramp-resources",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/busterjs/ramp-resources.git"
+  "name": "ramp-resources",
+  "version": "2.0.0",
+  "description": "Virtual file systems for exposing files and other resources on e.g. web servers",
+  "homepage": "http://busterjs.org/docs/resources",
+  "author": {
+    "name": "August Lilleaas"
+  },
+  "contributors": [
+    {
+      "name": "August Lilleaas",
+      "email": "august.lilleaas@gmail.com",
+      "url": "http://augustl.com"
     },
-    "scripts": {
-        "test": "node run-tests.js",
-        "test-debug": "node --debug-brk run-tests.js"
+    {
+      "name": "Christian Johansen",
+      "email": "christian@cjohansen.no",
+      "url": "http://cjohansen.no"
     },
-    "engines": {
-        "node": ">= 4"
+    {
+      "name": "Daniel Wittner",
+      "email": "d.wittner@gmx.de",
+      "url": "https://github.com/dwittner"
     },
-    "dependencies": {
-        "mime": "1.x",
-        "glob": "5.x",
-        "when": "3.x",
-        "minimatch": "3.x",
-        "lodash": "3.x"
-    },
-    "devDependencies": {
-        "rimraf": "2.x",
-        "buster-node": "0.7.x",
-        "samsam": "1.x"
+    {
+      "name": "Stein Magnus Jodal",
+      "email": "stein.magnus@jodal.no",
+      "url": "http://jodal.no"
     }
+  ],
+  "license": "BSD-3-Clause",
+  "main": "./lib/ramp-resources",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/busterjs/ramp-resources.git"
+  },
+  "scripts": {
+    "test": "node run-tests.js",
+    "test-debug": "node --debug-brk run-tests.js"
+  },
+  "engines": {
+    "node": ">= 4"
+  },
+  "dependencies": {
+    "mime": "1.x",
+    "glob": "5.x",
+    "when": "3.x",
+    "minimatch": "3.x",
+    "lodash": "3.x"
+  },
+  "devDependencies": {
+    "rimraf": "2.x",
+    "buster-node": "0.7.x",
+    "samsam": "1.x"
+  }
 }
