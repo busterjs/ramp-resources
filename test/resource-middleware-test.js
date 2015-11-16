@@ -180,11 +180,9 @@ buster.testCase("Resource middleware", {
         },
 
         "responds with 500 if resource content fails": function (done) {
-            var d = when.defer();
-            d.resolver.reject("Bleh");
             this.sets.withBuster.addResource({
                 path: "/dabomb",
-                content: function () { return d.promise; }
+                content: function () { return when.reject("Bleh"); }
             });
 
             h.req({ path: "/dabomb" }, done(function (req, res, body) {
@@ -194,11 +192,9 @@ buster.testCase("Resource middleware", {
         },
 
         "responds with 500 and stack trace when available": function (done) {
-            var d = when.defer();
-            d.resolver.reject(new Error("Damnit"));
             this.sets.withBuster.addResource({
                 path: "/dabomb",
-                content: function () { return d.promise; }
+                content: function () { return when.reject(new Error("Damnit")); }
             });
 
             h.req({ path: "/dabomb" }, done(function (req, res, body) {

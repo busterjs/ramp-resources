@@ -42,72 +42,77 @@ buster.testCase("Resource sets", {
         "fails if resource is falsy": function () {
             var msg = "Resource must be a string, a resource object or " +
                 "an object of resource properties";
-            assert.invalidResource(this.rs, null, msg);
+            return assert.invalidResource(this.rs, null, msg);
         },
 
         "fails with both file and backend": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 file: "something.js",
                 backend: "http://localhost:8080"
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails with both file and combine": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 file: "something.js",
                 combine: ["/a.js", "/b.js"]
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails with both content and combine": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 content: "Something",
                 combine: ["/a.js", "/b.js"]
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails with both backend and combine": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 backend: "http://localhost",
                 combine: ["/a.js", "/b.js"]
             }, "Resource can only have one of content, file, backend, combine");
         },
 
         "fails without path": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 content: "Hey"
             }, "Resource must have path");
         },
 
         "fails without content": function () {
-            assert.invalidResource(this.rs, {
+            return assert.invalidResource(this.rs, {
                 path: "/here"
             }, "No content");
         },
 
         "does not fail with only combine": function () {
-            refute.exception(function () {
-                this.rs.addResource({ path: "/path", combine: ["/a.js"] });
-            }.bind(this));
+            return this.rs.addResource("foo.js") // must add foo, before it can be combined
+                .then(function () {
+                    return this.rs.addResource({ path: "/path", combine: ["foo.js"] })
+                }.bind(this))
+                .catch(function (e) {
+                    console.trace(e);
+                    throw e;
+                })
+                .catch(this.mock().never());
         },
 
         "does not fail with only file": function () {
-            refute.exception(function () {
-                this.rs.addResource({ path: "/path", file: "fixtures/foo.js" });
-            }.bind(this));
+            return this.rs.addResource({ path: "/path", file: "foo.js" })
+                .catch(this.mock().never());
         },
 
         "does not fail with only etag": function () {
-            refute.exception(function () {
-                this.rs.addResource({ path: "/path", etag: "abcd" });
-            }.bind(this));
+            return this.rs.addResource({ path: "/path", etag: "abcd" })
+                .catch(this.mock().never());
         },
 
-        "is gettable with URL path when added as system path": function (done) {
+        "is gettable with URL path when added as system path": function () {
             var path = Path.join("test", "my-testish.js");
-            this.rs.addFileResource(path).then(done(function (resource) {
-                assert.equals(resource.path, "/test/my-testish.js");
-            }));
+            return this.rs.addFileResource(path)
+                .then(function (resource) {
+                    assert.equals(resource.path, "/test/my-testish.js");
+                });
         }
     },
 
@@ -148,13 +153,13 @@ buster.testCase("Resource sets", {
         },
 
         "returns promise": function () {
-            assert(when.isPromise(this.rs.addResource(this.resource)));
+            assert.isFunction(this.rs.addResource(this.resource).then);
         },
 
-        "resolves promise with resource": function (done) {
-            this.rs.addResource(this.resource).then(done(function (rs) {
+        "resolves promise with resource": function () {
+            return this.rs.addResource(this.resource).then(function (rs) {
                 assert.equals(this.resource, rs);
-            }.bind(this)));
+            }.bind(this));
         }
     },
 
@@ -341,10 +346,10 @@ buster.testCase("Resource sets", {
                 resource.addProcessor(function (resource, content) {
                     return "function () {" + content + "}";
                 });
-                this.rs.concat().whenAllAdded(done(function (rs) {
+                this.rs.concat().whenAllAdded(function (rs) {
                     var concat = "function () {var thisIsTheFoo = 5;}";
                     assert.content(rs.get("/buster.js"), concat, done);
-                }), done(logStack));
+                }, done(logStack));
             }.bind(this), done(logStack));
         }
     },
@@ -765,14 +770,14 @@ buster.testCase("Resource sets", {
             rs.addResources(["foo.js", "bar.js"]);
             var cb = countdown(2, done);
             rs.serialize().then(function (serialized) {
-                rr.deserialize(serialized).then(done(function (rs2) {
+                rr.deserialize(serialized).then(function (rs2) {
                     assert.equals(rs.length, rs2.length);
                     assert.equals(rs.loadPath.paths, rs.loadPath.paths);
                     assert.resourceEqual(rs.get("/foo.js"),
                                          rs2.get("/foo.js"), cb);
                     assert.resourceEqual(rs.get("/bar.js"),
                                          rs2.get("/bar.js"), cb);
-                }));
+                });
             });
         },
 
@@ -836,14 +841,14 @@ buster.testCase("Resource sets", {
             var rs3 = rr.createResourceSet();
             var add3 = rs2.addResource({ path: "/when.js", content: "when()" });
 
-            when.all([add1, add2, add3]).then(done(function () {
+            when.all([add1, add2, add3]).then(function () {
                 var rs4 = rs1.concat(rs2, rs3);
                 var cb = countdown(3, done);
 
                 assert.content(rs4.get("/buster.js"), "Ok", cb);
                 assert.content(rs4.get("/sinon.js"), "Nok", cb);
                 assert.content(rs4.get("/when.js"), "when()", cb);
-            }));
+            });
         },
 
         "resources overwrite from right to left": function (done) {
@@ -852,10 +857,10 @@ buster.testCase("Resource sets", {
             var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/buster.js", content: "Nok" });
 
-            when.all([add1, add2]).then(done(function () {
+            when.all([add1, add2]).then(function () {
                 var rs3 = rs1.concat(rs2);
                 assert.content(rs3.get("/buster.js"), "Nok", done);
-            }));
+            });
         },
 
         "appends load in order": function (done) {

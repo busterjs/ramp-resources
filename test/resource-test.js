@@ -9,29 +9,29 @@ require("./test-helper.js");
 buster.testCase("Resources", {
     "create": {
         "fails without resource": function () {
-            assert.invalidResource("/here", null, "No content");
+            return assert.invalidResource("/here", null, "No content");
         },
 
         "fails without content, or backend": function () {
-            assert.invalidResource("/here", {}, "No content");
+            return assert.invalidResource("/here", {}, "No content");
         },
 
         "fails with both content and backend": function () {
-            assert.invalidResource("/here", {
+            return assert.invalidResource("/here", {
                 content: "Something",
                 backend: "http://localhost:8080"
             }, "Resource cannot have both content and backend");
         },
 
         "fails with encoding and backend": function () {
-            assert.invalidResource("/here", {
+            return assert.invalidResource("/here", {
                 encoding: "utf-8",
                 backend: "http://localhost:8080"
             }, "Proxy resource cannot have hard-coded encoding");
         },
 
         "fails with invalid backend URL": function () {
-            assert.invalidResource("/here", {
+            return assert.invalidResource("/here", {
                 backend: "::/::localhost"
             }, "Invalid proxy backend '::/::localhost'");
         },
@@ -319,35 +319,38 @@ buster.testCase("Resources", {
         },
 
         "resolves content() when function promise resolves": function (done) {
-            var d = when.defer();
             var rs = rr.createResource("/api", { content: function () {
-                return d.promise;
+                return when.resolve("OMG");
             } });
-
-            d.resolver.resolve("OMG");
             assert.content(rs, "OMG", done);
         },
 
         "rejects content() when function promise rejects": function (done) {
-            var d = when.defer();
             var rs = rr.createResource("/api", { content: function () {
-                return d.promise;
+                return when.reject("OMG");
             } });
 
-            d.resolver.reject("OMG");
             rs.content().then(function () {}, done(function (err) {
                 assert.equals(err, "OMG");
             }));
         },
 
         "calls content function with resource as this": function () {
-            var content = this.spy();
+            var content = this.stub().returns("Some content");
             var rs = rr.createResource("/api", { content: content });
 
-            rs.content();
+            return rs.content().then(function () {
+                assert.calledOnce(content);
+                assert.calledOn(content, rs);
+            });
+        },
 
-            assert.calledOnce(content);
-            assert.calledOn(content, rs);
+        "rejects when function returns undefined": function () {
+            var rs = rr.createResource("/api", {content: this.spy()});
+
+            return rs.content().catch(function (e) {
+                refute.isNull(e);
+            });
         }
     },
 
