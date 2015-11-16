@@ -346,10 +346,10 @@ buster.testCase("Resource sets", {
                 resource.addProcessor(function (resource, content) {
                     return "function () {" + content + "}";
                 });
-                this.rs.concat().whenAllAdded(done(function (rs) {
+                this.rs.concat().whenAllAdded(function (rs) {
                     var concat = "function () {var thisIsTheFoo = 5;}";
                     assert.content(rs.get("/buster.js"), concat, done);
-                }), done(logStack));
+                }, done(logStack));
             }.bind(this), done(logStack));
         }
     },
@@ -770,14 +770,14 @@ buster.testCase("Resource sets", {
             rs.addResources(["foo.js", "bar.js"]);
             var cb = countdown(2, done);
             rs.serialize().then(function (serialized) {
-                rr.deserialize(serialized).then(done(function (rs2) {
+                rr.deserialize(serialized).then(function (rs2) {
                     assert.equals(rs.length, rs2.length);
                     assert.equals(rs.loadPath.paths, rs.loadPath.paths);
                     assert.resourceEqual(rs.get("/foo.js"),
                                          rs2.get("/foo.js"), cb);
                     assert.resourceEqual(rs.get("/bar.js"),
                                          rs2.get("/bar.js"), cb);
-                }));
+                });
             });
         },
 
@@ -841,14 +841,14 @@ buster.testCase("Resource sets", {
             var rs3 = rr.createResourceSet();
             var add3 = rs2.addResource({ path: "/when.js", content: "when()" });
 
-            when.all([add1, add2, add3]).then(done(function () {
+            when.all([add1, add2, add3]).then(function () {
                 var rs4 = rs1.concat(rs2, rs3);
                 var cb = countdown(3, done);
 
                 assert.content(rs4.get("/buster.js"), "Ok", cb);
                 assert.content(rs4.get("/sinon.js"), "Nok", cb);
                 assert.content(rs4.get("/when.js"), "when()", cb);
-            }));
+            });
         },
 
         "resources overwrite from right to left": function (done) {
@@ -857,10 +857,10 @@ buster.testCase("Resource sets", {
             var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/buster.js", content: "Nok" });
 
-            when.all([add1, add2]).then(done(function () {
+            when.all([add1, add2]).then(function () {
                 var rs3 = rs1.concat(rs2);
                 assert.content(rs3.get("/buster.js"), "Nok", done);
-            }));
+            });
         },
 
         "appends load in order": function (done) {
