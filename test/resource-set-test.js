@@ -339,18 +339,20 @@ buster.testCase("Resource sets", {
         },
 
         "processes concatenated combined content": function (done) {
-            this.rs.addResources([
-                "foo.js", { path: "/buster.js", combine: ["foo.js"] }
-            ]).then(function () {
-                var resource = this.rs.get("/buster.js");
-                resource.addProcessor(function (resource, content) {
-                    return "function () {" + content + "}";
-                });
-                this.rs.concat().whenAllAdded(function (rs) {
-                    var concat = "function () {var thisIsTheFoo = 5;}";
-                    assert.content(rs.get("/buster.js"), concat, done);
-                }, done(logStack));
-            }.bind(this), done(logStack));
+            this.rs.addResources([ "foo.js", { path: "/buster.js", combine: ["foo.js"] } ])
+                .then(function () {
+                    var resource = this.rs.get("/buster.js");
+                    resource.addProcessor(function (resource, content) {
+                        return "function () {" + content + "}";
+                    });
+                    return this.rs.concat();
+                }.bind(this))
+                .then(function (concatRs) {
+                    concatRs.whenAllAdded(function (rs) {
+                        var concat = "function () {var thisIsTheFoo = 5;}";
+                        assert.content(rs.get("/buster.js"), concat, done);
+                    }, done(logStack))
+                }.bind(this), done(logStack));
         }
     },
 
@@ -827,10 +829,10 @@ buster.testCase("Resource sets", {
             var rs1 = rr.createResourceSet();
             var rs2 = rr.createResourceSet();
 
-            var rs3 = rs1.concat(rs2);
-
-            refute.same(rs1, rs3);
-            refute.same(rs2, rs3);
+            return rs1.concat(rs2).then(function (rs3) {
+                refute.same(rs1, rs3);
+                refute.same(rs2, rs3);
+            });
         },
 
         "adds resources from all sources": function (done) {
@@ -841,14 +843,17 @@ buster.testCase("Resource sets", {
             var rs3 = rr.createResourceSet();
             var add3 = rs2.addResource({ path: "/when.js", content: "when()" });
 
-            when.all([add1, add2, add3]).then(function () {
-                var rs4 = rs1.concat(rs2, rs3);
-                var cb = countdown(3, done);
+            when.all([add1, add2, add3])
+                .then(function () {
+                    return rs1.concat(rs2, rs3);
+                })
+                .then(function (rs4) {
+                    var cb = countdown(3, done);
 
-                assert.content(rs4.get("/buster.js"), "Ok", cb);
-                assert.content(rs4.get("/sinon.js"), "Nok", cb);
-                assert.content(rs4.get("/when.js"), "when()", cb);
-            });
+                    assert.content(rs4.get("/buster.js"), "Ok", cb);
+                    assert.content(rs4.get("/sinon.js"), "Nok", cb);
+                    assert.content(rs4.get("/when.js"), "when()", cb);
+                });
         },
 
         "resources overwrite from right to left": function (done) {
@@ -857,10 +862,13 @@ buster.testCase("Resource sets", {
             var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/buster.js", content: "Nok" });
 
-            when.all([add1, add2]).then(function () {
-                var rs3 = rs1.concat(rs2);
-                assert.content(rs3.get("/buster.js"), "Nok", done);
-            });
+            when.all([add1, add2])
+                .then(function () {
+                    return rs1.concat(rs2);
+                })
+                .then(function (rs3) {
+                    assert.content(rs3.get("/buster.js"), "Nok", done);
+                });
         },
 
         "appends load in order": function (done) {
@@ -869,48 +877,55 @@ buster.testCase("Resource sets", {
             var rs2 = rr.createResourceSet();
             var add2 = rs2.addResource({ path: "/sinon.js", content: "Nok" });
 
-            when.all([add1, add2]).then(done(function () {
-                rs1.loadPath.append("/buster.js");
-                rs2.loadPath.append("/sinon.js");
-                var rs = rs1.concat(rs2);
-                var paths = rs.loadPath.paths();
-                assert.equals(rs.loadPath.paths(), ["/buster.js", "/sinon.js"]);
-            }));
+            when.all([add1, add2])
+                .then(function () {
+                    rs1.loadPath.append("/buster.js");
+                    rs2.loadPath.append("/sinon.js");
+                    return rs1.concat(rs2);
+                })
+                .then(done(function (rs) {
+                    var paths = rs.loadPath.paths();
+                    assert.equals(rs.loadPath.paths(), ["/buster.js", "/sinon.js"]);
+                }));
         },
 
         "concats backend resources": function (done) {
             var rs1 = rr.createResourceSet();
 
-            rs1.addResource({
-                path: "/buster",
-                backend: "localhost:1111"
-            }).then(done(function () {
-                var rs = rs1.concat();
-                assert.equals(rs.get("buster").backend, "localhost:1111");
-            }));
+            rs1.addResource({ path: "/buster", backend: "localhost:1111" })
+                .then(function () {
+                    return rs1.concat();
+                })
+                .then(done(function (rs) {
+                    assert.equals(rs.get("buster").backend, "localhost:1111");
+                }));
         },
 
         "concats combine resources": function (done) {
             var rs1 = rr.createResourceSet();
             rs1.addResources([
-                { path: "/a", content: "1" },
-                { path: "/b", content: "2" },
-                { path: "/c", combine: ["/a", "/b"] }
-            ]).then(function () {
-                rs1.concat().whenAllAdded(done(function (rs) {
-                    assert.defined(rs.get("/c"));
-                    assert.equals(rs.get("/c").combine, ["/a", "/b"]);
-                }));
-            });
+                    {path: "/a", content: "1"},
+                    {path: "/b", content: "2"},
+                    {path: "/c", combine: ["/a", "/b"]}
+                ])
+                .then(function () {
+                    return rs1.concat();
+                })
+                .then(function (concatRs) {
+                    concatRs.whenAllAdded(done(function (rs) {
+                        assert.defined(rs.get("/c"));
+                        assert.equals(rs.get("/c").combine, ["/a", "/b"]);
+                    }))
+                });
         },
 
         "uses rootpath of target resource set": function () {
             var rs1 = rr.createResourceSet("/tmp");
             var rs2 = rr.createResourceSet("/var");
 
-            var rs3 = rs1.concat(rs2);
-
-            assert.equals(rs3.rootPath, "/tmp");
+            return rs1.concat(rs2).then(function (rs3) {
+                assert.equals(rs3.rootPath, "/tmp");
+            });
         },
 
         "restricts length to unique resources": function (done) {
@@ -918,12 +933,18 @@ buster.testCase("Resource sets", {
             var add1 = rs1.addResource({ path: "/buster.js", content: "Ok" });
             var add2 = rs1.addResource({ path: "/sinon.js", content: "Yep" });
 
-            when.all([add1, add2]).then(done(function () {
-                var rs2 = rs1.concat();
-                var rs3 = rs1.concat();
-                var rs4 = rs1.concat(rs2, rs3);
-                assert.equals(rs4.length, 2);
-            }));
+            when.all([add1, add2])
+                .then(function () {
+                    return when.all([rs1.concat(), rs1.concat()]);
+                })
+                .then(function (args) {
+                    var rs2 = args[0];
+                    var rs3 = args[1];
+                    return rs1.concat(rs2, rs3);
+                })
+                .then(done(function (rs4) {
+                    assert.equals(rs4.length, 2);
+                }));
         }
     },
 
