@@ -10,10 +10,11 @@ client and on the server in Buster.JS test runs.
 
 ## Changelog
 
-**2.0.0** (2015-Nov-17)
+**2.0.1** (2015-Nov-26)
 
 * BREAKING: upgraded to `when@3` from `when@1` - promises are now Common/A+ compliant and no longer release Zalgo
 * BREAKING: node support: min 4.2 LTS (Argon) required
+* BREAKING: concat() now returns a promise
 * License field in package.json
 
 **1.0.5** (2014-Aug-08)
