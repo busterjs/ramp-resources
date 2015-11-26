@@ -1,6 +1,6 @@
 {
   "name": "ramp-resources",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Virtual file systems for exposing files and other resources on e.g. web servers",
   "homepage": "http://busterjs.org/docs/resources",
   "author": {
