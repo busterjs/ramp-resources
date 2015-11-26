@@ -10,6 +10,10 @@ client and on the server in Buster.JS test runs.
 
 ## Changelog
 
+**2.0.2** (2015-Nov-26)
+
+* Wait for all resources to be added fully before completing concat()
+
 **2.0.1** (2015-Nov-26)
 
 * BREAKING: upgraded to `when@3` from `when@1` - promises are now Common/A+ compliant and no longer release Zalgo
