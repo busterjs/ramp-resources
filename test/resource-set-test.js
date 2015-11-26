@@ -945,6 +945,22 @@ buster.testCase("Resource sets", {
                 .then(done(function (rs4) {
                     assert.equals(rs4.length, 2);
                 }));
+        },
+
+        "resolves all resources asynchronously before proceeding": function (done) {
+            var anotherRs = rr.createResourceSet(FIXTURE_DIR);
+
+            this.rs.addResources([
+                "foo.js", "bar.js", // file resources load in next tick
+                { path: "baz.js", combine: ["/foo.js", "/bar.js"] } // combined resource is resolved in next next tick
+            ]);
+
+            this.rs.whenAllAdded(function (rs) {
+                anotherRs.concat(rs) // this concat needs to wait for all the ticks above to complete
+                    .then(function (concatRs) {
+                        assert.content(concatRs.get("/baz.js"), "var thisIsTheFoo = 5;var helloFromBar = 1;", done)
+                    });
+            });
         }
     },
 
