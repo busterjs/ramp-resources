@@ -1,6 +1,6 @@
 #ramp-resources
 
-[![Build status](https://secure.travis-ci.org/busterjs/ramp-resources.png?branch=master)](http://travis-ci.org/busterjs/ramp-resources)
+[![Build status](https://secure.travis-ci.org/busterjs/ramp-resources.png?branch=master)](http://travis-ci.org/busterjs/ramp-resources) [![Build status](https://ci.appveyor.com/api/projects/status/github/busterjs/ramp-resources?branch=master&svg=true)](https://ci.appveyor.com/project/dominykas/ramp-resources)
 
 Files, proxies and inline "virtual files" over the air
 
